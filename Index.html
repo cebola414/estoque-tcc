@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Página Inicial</title>
+    <style>
+        /* Regras Globais */
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+            overflow-x: hidden;
+            background-color: #f3f4f6;
+        }
+
+        /* Layout Wrapper */
+        .wrapper {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .container {
+            flex: 1;
+            padding-left: 20px;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Cabeçalho */
+        header {
+            background-color: #1e1e1e;
+            display: flex;
+            color: #a6a6a6;
+            padding: 10px;
+            align-items: center;
+        }
+
+        header img.logo {
+            max-width: 65px;
+            max-height: 65px;
+            width: auto;
+            height: auto;
+        }
+
+        header h1 {
+            font-size: 40px;
+            margin: 0;
+            color: #fff;
+            padding-left: 15px;
+        }
+
+        /* Navegação */
+        nav {
+            background-color: #282828;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        nav a {
+            color: #fff;
+            text-align: center;
+            padding: 14px 20px;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        nav a:hover {
+            background-color: #ddd;
+            color: black;
+        }
+
+        /* Conteúdo Principal */
+        .content {
+            margin-top: 20px;
+            margin-right: 600px;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 30px;
+        }
+
+        p {
+            font-size: 20px;
+        }
+
+        /* Botões */
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            text-decoration: none;
+            color: #ffffff;
+            background-color: #282828;
+            border: none;
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        .button:hover {
+            background-color: #ddd;
+            color: black;
+            transform: scale(1.05);
+        }
+
+        .butonhide {
+            text-decoration: none;
+            color: #a6a6a6;
+        }
+
+        /* Rodapé */
+        footer {
+            background-color: #1e1e1e;
+            color: #a6a6a6;
+            width: 100%;
+            padding: 0.5rem;
+            box-sizing: border-box;
+        }
+
+        footer p {
+            color: whitesmoke;
+            font-size: small;
+            text-align: left;
+            margin: 20px;
+        }
+
+        footer a {
+            text-decoration: none;
+            color: #a6a6a6;
+        }
+
+        .ptitle {
+            color: #a6a6a6;
+            font-weight: bold;
+            font-size: large;
+            text-align: left;
+            padding-bottom: 10px;
+            margin: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <header>
+            <img class="logo" src="Imagens/Logo Supremo pequeno.png" alt="Logo Supremo Storage" />
+            <h1>Supremo Storage</h1>
+        </header>
+
+        <nav>
+            <a class="login" href="user/register.php">Registre-se</a>
+            <a class="login" href="user/login.php">Login</a>
+        </nav>
+
+        <div class="container">
+            <div class="content">
+                <div id="historia">
+                    <h2>Por que usar o nosso sistema?</h2>
+                    <p>
+                        Nosso site foi desenvolvido com o objetivo de proporcionar a melhor experiência possível para os
+                        usuários. Com uma interface intuitiva e de fácil navegação, qualquer pessoa, independentemente
+                        de
+                        sua experiência prévia, poderá utilizá-lo de forma simples e eficiente. Nossa missão é facilitar
+                        o
+                        acesso e o uso, garantindo que todos possam aproveitar ao máximo as funcionalidades oferecidas.
+                    </p>
+                    <button class="button"><a class="butonhide" href="Login.html">Experimente!</a></button>
+                </div>
+                <div>
+                    <h2>Quais as vantagens?</h2>
+                    <p>
+                        Um site intuitivo oferece diversas vantagens significativas. Ele garante que qualquer pessoa,
+                        independentemente de sua experiência tecnológica, possa navegar e utilizar a plataforma com
+                        facilidade. Isso não só amplia a acessibilidade, mas também aumenta o engajamento, pois os
+                        usuários
+                        encontram o que precisam de forma rápida e sem frustrações. Além disso, uma interface simples
+                        reduz
+                        a necessidade de suporte técnico, o que pode diminuir custos e melhorar a eficiência. Com uma
+                        navegação facilitada, as taxas de conversão tendem a subir, e a satisfação do usuário cresce,
+                        resultando
+                        em maior fidelização e recomendações positivas. Em resumo, um design intuitivo proporciona uma
+                        experiência agradável e eficaz para todos os usuários.
+                    </p>
+                </div>
+                <div>
+                    <h2>Nossa história</h2>
+                    <p>
+                        Esse site foi criado para um trabalho de conclusão de curso, pensando em ser o mais simples
+                        possível
+                        para que qualquer pessoa possa utilizá-lo sem dificuldade.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <footer id="contato">
+            <p class="ptitle">Entre em contato conosco</p>
+            <p>
+                - Telefone: 45 99975-5243 ou pelo link <a href="https://wa.link/oj1m9n">AQUI</a>
+            </p>
+            <p>- Email: carlos.specia@escola.pr.gov.br</p>
+        </footer>
+    </div>
+</body>
+
+</html>
