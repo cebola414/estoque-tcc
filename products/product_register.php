@@ -1,10 +1,11 @@
 <?php
-require_once '../includes/auth_check.php';
+require_once '../includes/auth_check.php'; // Inclua o arquivo de verificação de autenticação
 require_once '../db/config.php';
 
-// Função para obter todos os produtos
-function getProducts($pdo) {
-    $stmt = $pdo->query("SELECT * FROM products");
+// Função para obter todos os produtos do usuário autenticado
+function getProducts($pdo, $userId) {
+    $stmt = $pdo->prepare("SELECT * FROM products WHERE user_id = ?");
+    $stmt->execute([$userId]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
@@ -16,20 +17,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $description = $_POST['description'];
     $quantity = $_POST['quantity'];
     $supplier = $_POST['supplier'];
+    $userId = $_SESSION['user_id']; // ID do usuário autenticado
 
     if ($action === 'add') {
-        $stmt = $pdo->prepare("INSERT INTO products (name, description, quantity, supplier) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$name, $description, $quantity, $supplier]);
+        $stmt = $pdo->prepare("INSERT INTO products (name, description, quantity, supplier, user_id) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([$name, $description, $quantity, $supplier, $userId]);
     } elseif ($action === 'update') {
         if ($id) {
-            $stmt = $pdo->prepare("UPDATE products SET name = ?, description = ?, quantity = ?, supplier = ? WHERE id = ?");
-            $stmt->execute([$name, $description, $quantity, $supplier, $id]);
+            $stmt = $pdo->prepare("UPDATE products SET name = ?, description = ?, quantity = ?, supplier = ? WHERE id = ? AND user_id = ?");
+            $stmt->execute([$name, $description, $quantity, $supplier, $id, $userId]);
         }
     } elseif ($action === 'delete') {
-        $stmt = $pdo->prepare("DELETE FROM products WHERE id = ?");
-        $stmt->execute([$id]);
+        $stmt = $pdo->prepare("DELETE FROM products WHERE id = ? AND user_id = ?");
+        $stmt->execute([$id, $userId]);
     } elseif ($action === 'delete_all') {
-        $stmt = $pdo->query("DELETE FROM products");
+        $stmt = $pdo->prepare("DELETE FROM products WHERE user_id = ?");
+        $stmt->execute([$userId]);
     }
 
     // Redirecionar após a operação
@@ -38,7 +41,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 }
 
 // Obter produtos para exibir na tabela
-$products = getProducts($pdo);
+$products = getProducts($pdo, $_SESSION['user_id']);
+
+// Obter informações do usuário
+$userId = $_SESSION['user_id'];
+$userStmt = $pdo->prepare("SELECT username FROM users WHERE id = ?");
+$userStmt->execute([$userId]);
+$user = $userStmt->fetch(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -48,7 +57,6 @@ $products = getProducts($pdo);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cadastro de Produto</title>
     <style>
-        /* Reset básico e fontes */
         body {
             font-family: 'Arial', sans-serif;
             background-color: #f4f4f4;
@@ -60,9 +68,9 @@ $products = getProducts($pdo);
         header {
             background-color: #1e1e1e;
             display: flex;
+            justify-content: space-between;
             color: #a6a6a6;
-            padding: 5px;
-            font-family: sans-serif;
+            padding: 5px 20px;
             align-items: center;
         }
 
@@ -74,8 +82,32 @@ $products = getProducts($pdo);
         }
 
         header h1 {
-            padding-left: 20px;
             color: #a6a6a6;
+            margin: 0;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-info span {
+            color: #a6a6a6;
+        }
+
+        .buttonLogout {
+            background-color: #ce0000;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            font-size: 14px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .buttonLogout:hover {
+            background-color: #6b0000;
         }
 
         /* Navegação */
@@ -235,8 +267,14 @@ $products = getProducts($pdo);
 </head>
 <body>
     <header>
-        <img class="logo" src="Imagens\box.png" alt="Logo Box" />
+        <img class="logo" src="../Imagens/box.png" alt="Logo Box" />
         <h1>Estoque</h1>
+        <div class="user-info">
+            <span>Bem-vindo, <?php echo htmlspecialchars($user['username']); ?>!</span>
+            <form action="../logout.php" method="POST" style="display:inline;">
+                <button type="submit" class="buttonLogout">Logout</button>
+            </form>
+        </div>
     </header>
     <nav>
         <a href="../Index.html">Inicio</a>
