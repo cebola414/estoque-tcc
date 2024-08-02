@@ -5,6 +5,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Página Inicial</title>
+    <!-- Adicionando a fonte "Lato" do Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
     <style>
         /* Regras Globais */
         body,
@@ -12,9 +14,11 @@
             margin: 0;
             padding: 0;
             height: 100%;
-            font-family: Arial, sans-serif;
-            overflow-x: hidden;
+            font-family: 'Lato', sans-serif;
+            /* Aplicando fonte mais profissional */
             background-color: #f3f4f6;
+            overflow-x: hidden;
+            /* Evita o scroll horizontal */
         }
 
         /* Layout Wrapper */
@@ -24,33 +28,26 @@
             min-height: 100vh;
         }
 
-        .container {
-            flex: 1;
-            padding-left: 20px;
-            max-width: 100%;
-            box-sizing: border-box;
-        }
-
-        .title {
-            background-color: #cbcbcb;
-            padding: 10px;
-            margin-bottom: 100px;
-        }
-
-        /* Cabeçalho */
         header {
             background-color: #1e1e1e;
             display: flex;
-            color: #a6a6a6;
-            padding: 10px;
             align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            color: #a6a6a6;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            /* Sombra mais visível */
+            position: relative;
+            /* Para garantir que o z-index funcione */
+            z-index: 10;
+            /* Garante que o header fique acima de outros elementos */
+            font-family: Arial, sans-serif;
+            /* Mantém a fonte original no header */
         }
 
         header img.logo {
             max-width: 65px;
             max-height: 65px;
-            width: auto;
-            height: auto;
         }
 
         header h1 {
@@ -60,10 +57,29 @@
             padding-left: 15px;
         }
 
+        .auth-links {
+            display: flex;
+            align-items: center;
+        }
+
+        .auth-links a {
+            background-color: #fff;
+            color: #1e1e1e;
+            padding: 10px 20px;
+            margin-left: 10px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .auth-links a:hover {
+            background-color: #ddd;
+        }
+
         /* Navegação */
         nav {
             background-color: #282828;
-            overflow: hidden;
             display: flex;
             justify-content: center;
             flex-wrap: wrap;
@@ -84,32 +100,94 @@
         }
 
         /* Conteúdo Principal */
+        .container {
+            flex: 1;
+            box-sizing: border-box;
+        }
+
         .content {
-            margin-top: 20px;
-            margin-right: 600px;
             text-align: center;
         }
 
-        h2 {
-            font-size: 30px;
+        /* Regras específicas para .title */
+        .title {
+            background-color: #e8e8e8;
         }
 
-        p {
+        .title-content {
+            display: flex;
+            justify-content: space-between;
+            padding-bottom: 60px;
+            align-items: flex-start;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.07);
+        }
+
+        .title h2 {
+            font-weight: 900;
+            margin-left: 89px;
+            font-size: 60px;
+            margin-right: 50px;
+            text-align: left;
+            /* Mantém o estilo específico para h2 dentro de .title */
+        }
+
+        .title p {
+            flex: 1;
             font-size: 20px;
+            padding: 0 89px 50px;
+            padding-right: 400px;
+            text-align: left;
+            /* Mantém o estilo específico para p dentro de .title */
+        }
+
+        .title img {
+            max-width: 500px;
+            height: 400px;
+            border-radius: 10px;
+            margin-top: 100px;
+        }
+
+        /* Imagem Lado Esquerdo */
+        .img-left {
+            display: flex;
+            align-items: flex-start;
+            padding: 20px;
+            background-color: #f3f4f6;
+
+        }
+
+        .img-left h2 {
+            font-size: 40px;
+            text-align: center;
+        }
+
+        .img-left p {
+            text-align: center;
+            font-size: 18px;
+            margin-top: 70px;
+            padding: 0px 100px 50px;
+        }
+
+        .img-left img {
+            max-width: 400px;
+            height: auto;
+            margin-right: 40px;
+        }
+
+        .img-left div {
+            text-align: left;
         }
 
         /* Botões */
         .button {
-            display: inline-block;
-            padding: 10px 20px;
-            font-size: 16px;
+            margin-right: 670px;
+            padding: 23px 32px;
+            font-size: 20px;
             font-weight: bold;
-            text-align: center;
-            text-decoration: none;
-            color: #ffffff;
+            color: #fff;
             background-color: #282828;
             border: none;
-            border-radius: 5px;
+            border-radius: 50px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
             cursor: pointer;
             transition: background-color 0.3s, transform 0.3s;
@@ -121,9 +199,9 @@
             transform: scale(1.05);
         }
 
-        .butonhide {
+        .button a {
             text-decoration: none;
-            color: #a6a6a6;
+            color: #fff;
         }
 
         /* Rodapé */
@@ -155,64 +233,88 @@
             padding-bottom: 10px;
             margin: 20px;
         }
+
+        .history {
+            background-color: #e8e8e8;
+        }
+
+        .history p {
+            margin: 0;
+            text-align: center;
+            font-size: 20;
+        }
+
+        .history h2 {
+            margin: 0;
+            text-align: center;
+            font-size: 60;
+        }
     </style>
 </head>
 
 <body>
     <div class="wrapper">
         <header>
-            <img class="logo" src="Imagens/Logo Supremo pequeno.png" alt="Logo Supremo Storage" />
-            <h1>Supremo Storage</h1>
+            <div style="display: flex; align-items: center;">
+                <img class="logo" src="Imagens/Logo Supremo pequeno.png" alt="Logo Supremo Storage" />
+                <h1>Supremo Storage</h1>
+            </div>
+            <div class="auth-links">
+                <a href="user/register.php">Registre-se</a>
+                <a href="user/login.php">Login</a>
+            </div>
         </header>
-
-        <nav>
-            <a class="login" href="user/register.php">Registre-se</a>
-            <a class="login" href="user/login.php">Login</a>
-        </nav>
 
         <div class="container">
             <div class="content">
                 <div id="historia">
                     <div class="title">
-                        <h2>Por que usar o nosso sistema?</h2>
-                        <p>
-                            Nosso site foi desenvolvido com o objetivo de proporcionar a melhor experiência possível
-                            para os
-                            usuários. Com uma interface intuitiva e de fácil navegação, qualquer pessoa,
-                            independentemente
-                            de
-                            sua experiência prévia, poderá utilizá-lo de forma simples e eficiente. Nossa missão é
-                            facilitar
-                            o
-                            acesso e o uso, garantindo que todos possam aproveitar ao máximo as funcionalidades
-                            oferecidas.
-                        </p>
-
-                        <button class="button"><a class="butonhide" href="user/login.php">Experimente!</a></button>
+                        <div class="title-content">
+                            <div>
+                                <h2>Por que usar o nosso sistema?</h2>
+                                <p>
+                                    Nosso site foi desenvolvido com o objetivo de proporcionar a melhor experiência
+                                    possível para os usuários. Com uma interface intuitiva e de fácil navegação,
+                                    qualquer pessoa, independentemente de sua experiência prévia, poderá utilizá-lo
+                                    de forma simples e eficiente. Nossa missão é facilitar o acesso e o uso, garantindo
+                                    que todos possam aproveitar ao máximo as funcionalidades oferecidas.
+                                </p>
+                                <button class="button"><a href="user/login.php">Experimente!</a></button>
+                            </div>
+                            <img src="Imagens/WomanBox.png" alt="Womanbox">
+                        </div>
                     </div>
                 </div>
-                <div>
-                    <h2>Quais as vantagens?</h2>
-                    <p>
-                        Um site intuitivo oferece diversas vantagens significativas. Ele garante que qualquer pessoa,
-                        independentemente de sua experiência tecnológica, possa navegar e utilizar a plataforma com
-                        facilidade. Isso não só amplia a acessibilidade, mas também aumenta o engajamento, pois os
-                        usuários
-                        encontram o que precisam de forma rápida e sem frustrações. Além disso, uma interface simples
-                        reduz
-                        a necessidade de suporte técnico, o que pode diminuir custos e melhorar a eficiência. Com uma
-                        navegação facilitada, as taxas de conversão tendem a subir, e a satisfação do usuário cresce,
-                        resultando
-                        em maior fidelização e recomendações positivas. Em resumo, um design intuitivo proporciona uma
-                        experiência agradável e eficaz para todos os usuários.
-                    </p>
+                <div class="img-left">
+                    <img src="Imagens/BadBox.png" alt="PostureBox">
+                    <div>
+                        <h2>Veja como o trabalho fica mais fácil!</h2>
+                        <p>
+                            Um site intuitivo oferece diversas vantagens significativas. Ele garante que qualquer
+                            pessoa,
+                            independentemente de sua experiência tecnológica, possa navegar e utilizar a plataforma com
+                            facilidade. Isso não só amplia a acessibilidade, mas também aumenta o engajamento, pois os
+                            usuários encontram o que precisam de forma rápida e sem frustrações. Além disso, uma
+                            interface
+                            simples reduz a necessidade de suporte técnico, o que pode diminuir custos e melhorar a
+                            eficiência. Com uma navegação facilitada, as taxas de conversão tendem a subir, e a
+                            satisfação
+                            do usuário cresce, resultando em maior fidelização e recomendações positivas. Em resumo, um
+                            design intuitivo proporciona uma experiência agradável e eficaz para todos os usuários.
+                        </p>
+                    </div>
                 </div>
-                <div>
+                <div class="history">
                     <h2>Nossa história</h2>
                     <p>
-                        Esse site foi criado para um trabalho de conclusão de curso, pensando em ser o mais simples
-                        possível
-                        para que qualquer pessoa possa utilizá-lo sem dificuldade.
+                        Este site foi desenvolvido como parte do nosso trabalho de conclusão de curso, com o objetivo de
+                        proporcionar uma experiência simples e acessível para todos. Nossa missão é garantir que
+                        qualquer pessoa possa utilizar a plataforma sem dificuldades, independentemente de suas
+                        habilidades técnicas.
+
+                        Acreditamos que a simplicidade é a chave para a eficácia e facilidade de uso. Por isso,
+                        projetamos o site com uma interface intuitiva e recursos descomplicados, visando tornar sua
+                        navegação a mais agradável possível.
                     </p>
                 </div>
             </div>
