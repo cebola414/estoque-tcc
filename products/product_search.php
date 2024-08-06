@@ -1,29 +1,29 @@
 <?php
 require_once '../db/config.php';
 
-// Verificar se o usuário está autenticado
-session_start();
-if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
-    exit();
-}
+$search = $_GET['search'] ?? '';
 
-$userId = $_SESSION['user_id'];
-$productName = $_GET['name'] ?? null;
-
-if ($productName) {
-    try {
-        $stmt = $pdo->prepare("SELECT * FROM products WHERE name LIKE ? AND user_id = ?");
-        $stmt->execute(["%$productName%", $userId]);
-        $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        echo json_encode($products);
-    } catch (PDOException $e) {
-        // Log the error message
-        error_log($e->getMessage());
-        echo json_encode(['error' => 'Ocorreu um erro ao buscar os produtos.']);
+if (!empty($search)) {
+    // Escapando a entrada para prevenir SQL Injection
+    $search = "%{$search}%";
+    $stmt = $pdo->prepare("SELECT * FROM products WHERE name LIKE ?");
+    $stmt->execute([$search]);
+    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    if (!empty($products)) {
+        foreach ($products as $product) {
+            echo "<tr>";
+            echo "<td>" . htmlspecialchars($product['id']) . "</td>";
+            echo "<td>" . htmlspecialchars($product['name']) . "</td>";
+            echo "<td>" . htmlspecialchars($product['description']) . "</td>";
+            echo "<td>" . htmlspecialchars($product['quantity']) . "</td>";
+            echo "<td>" . htmlspecialchars($product['supplier']) . "</td>";
+            echo "</tr>";
+        }
+    } else {
+        echo "<tr><td colspan='5'>Nenhum produto encontrado.</td></tr>";
     }
 } else {
-    echo json_encode(['error' => 'Nome do produto não fornecido.']);
+    echo "<tr><td colspan='5'>Por favor, insira um termo de pesquisa.</td></tr>";
 }
 ?>
