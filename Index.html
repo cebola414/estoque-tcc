@@ -6,265 +6,390 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Página Inicial</title>
     <!-- Link para importar a fonte "Lato" do Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet" />
     <style>
         /* Estilo global para o corpo e html da página */
         body,
         html {
-            margin: 0; /* Remove margens padrão */
-            padding: 0; /* Remove preenchimentos padrão */
-            height: 100%; /* Garante que o corpo ocupe toda a altura da janela */
-            font-family: 'Lato', sans-serif; /* Aplica a fonte "Lato" como padrão */
-            background-color: #f3f4f6; /* Define a cor de fundo da página */
-            overflow-x: hidden; /* Evita rolagem horizontal */
+            margin: 0;
+            /* Remove margens padrão */
+            padding: 0;
+            /* Remove preenchimentos padrão */
+            height: 100%;
+            /* Garante que o corpo ocupe toda a altura da janela */
+            font-family: "Lato", sans-serif;
+            /* Aplica a fonte "Lato" como padrão */
+            background-color: #f3f4f6;
+            /* Define a cor de fundo da página */
+            overflow-x: hidden;
+            /* Evita rolagem horizontal */
         }
 
         /* Estilo para o wrapper que envolve o conteúdo da página */
         .wrapper {
-            display: flex; /* Utiliza flexbox para layout */
-            flex-direction: column; /* Alinha os itens em uma coluna */
-            min-height: 100vh; /* Garante que o wrapper ocupe pelo menos 100% da altura da janela */
+            display: flex;
+            /* Utiliza flexbox para layout */
+            flex-direction: column;
+            /* Alinha os itens em uma coluna */
+            min-height: 100vh;
+            /* Garante que o wrapper ocupe pelo menos 100% da altura da janela */
         }
 
         /* Estilo para o cabeçalho da página */
         header {
-            background-color: #1e1e1e; /* Define a cor de fundo do cabeçalho */
-            display: flex; /* Utiliza flexbox para layout */
-            align-items: center; /* Alinha itens verticalmente no centro */
-            justify-content: space-between; /* Distribui espaço entre itens */
-            padding: 10px; /* Adiciona espaçamento interno */
-            color: #a6a6a6; /* Define a cor do texto */
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3); /* Adiciona uma sombra ao cabeçalho */
-            position: relative; /* Permite o uso de z-index */
-            z-index: 10; /* Garante que o cabeçalho fique acima de outros elementos */
-            font-family: Arial, sans-serif; /* Aplica a fonte Arial no cabeçalho */
+            background-color: #1e1e1e;
+            /* Define a cor de fundo do cabeçalho */
+            display: flex;
+            /* Utiliza flexbox para layout */
+            align-items: center;
+            /* Alinha itens verticalmente no centro */
+            justify-content: space-between;
+            /* Distribui espaço entre itens */
+            padding: 10px;
+            /* Adiciona espaçamento interno */
+            color: #a6a6a6;
+            /* Define a cor do texto */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            /* Adiciona uma sombra ao cabeçalho */
+            position: relative;
+            /* Permite o uso de z-index */
+            z-index: 10;
+            /* Garante que o cabeçalho fique acima de outros elementos */
+            /* Aplica a fonte Arial no cabeçalho */
         }
 
         /* Estilo para a imagem do logo no cabeçalho */
         header img.logo {
-            max-width: 65px; /* Define a largura máxima do logo */
-            max-height: 65px; /* Define a altura máxima do logo */
+            max-width: 65px;
+            /* Define a largura máxima do logo */
+            max-height: 65px;
+            /* Define a altura máxima do logo */
         }
 
         /* Estilo para o título principal no cabeçalho */
         header h1 {
-            font-size: 40px; /* Define o tamanho da fonte do título */
-            margin: 0; /* Remove a margem padrão */
-            color: #fff; /* Define a cor do texto como branco */
-            padding-left: 15px; /* Adiciona um espaço à esquerda do título */
+            font-weight: 900;
+            font-size: 40px;
+            /* Define o tamanho da fonte do título */
+            margin: 0;
+            /* Remove a margem padrão */
+            color: #fff;
+            /* Define a cor do texto como branco */
+            padding-left: 15px;
+            /* Adiciona um espaço à esquerda do título */
+            font-family: sans-serif;
         }
 
         /* Estilo para os links de autenticação no cabeçalho */
         .auth-links {
-            display: flex; /* Utiliza flexbox para layout */
-            align-items: center; /* Alinha itens verticalmente no centro */
+            display: flex;
+            /* Utiliza flexbox para layout */
+            align-items: center;
+            /* Alinha itens verticalmente no centro */
         }
 
         /* Estilo para os links dentro da área de autenticação */
         .auth-links a {
-            background-color: #fff; /* Define a cor de fundo dos links */
-            color: #1e1e1e; /* Define a cor do texto dos links */
-            padding: 10px 20px; /* Adiciona espaçamento interno aos links */
-            margin-left: 10px; /* Adiciona um espaço à esquerda dos links */
-            text-decoration: none; /* Remove o sublinhado dos links */
-            border-radius: 5px; /* Adiciona bordas arredondadas aos links */
-            font-weight: bold; /* Define o texto como negrito */
-            transition: background-color 0.3s; /* Adiciona uma transição suave para a cor de fundo */
+            background-color: #fff;
+            /* Define a cor de fundo dos links */
+            color: #1e1e1e;
+            /* Define a cor do texto dos links */
+            padding: 10px 20px;
+            /* Adiciona espaçamento interno aos links */
+            margin-left: 10px;
+            /* Adiciona um espaço à esquerda dos links */
+            text-decoration: none;
+            /* Remove o sublinhado dos links */
+            border-radius: 5px;
+            /* Adiciona bordas arredondadas aos links */
+            font-weight: bold;
+            /* Define o texto como negrito */
+            transition: background-color 0.3s;
+            /* Adiciona uma transição suave para a cor de fundo */
         }
 
         /* Estilo para o estado de foco dos links de autenticação */
         .auth-links a:hover {
-            background-color: #ddd; /* Altera a cor de fundo quando o link é focalizado */
+            background-color: #ddd;
+            /* Altera a cor de fundo quando o link é focalizado */
         }
 
         /* Estilo para a barra de navegação */
         nav {
-            background-color: #282828; /* Define a cor de fundo da barra de navegação */
-            display: flex; /* Utiliza flexbox para layout */
-            justify-content: center; /* Centraliza os itens horizontalmente */
-            flex-wrap: wrap; /* Permite que os itens se movam para a linha seguinte se necessário */
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); /* Adiciona uma sombra à barra de navegação */
+            background-color: #282828;
+            /* Define a cor de fundo da barra de navegação */
+            display: flex;
+            /* Utiliza flexbox para layout */
+            justify-content: center;
+            /* Centraliza os itens horizontalmente */
+            flex-wrap: wrap;
+            /* Permite que os itens se movam para a linha seguinte se necessário */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            /* Adiciona uma sombra à barra de navegação */
         }
 
         /* Estilo para os links dentro da barra de navegação */
         nav a {
-            color: #fff; /* Define a cor do texto dos links */
-            text-align: center; /* Centraliza o texto dos links */
-            padding: 14px 20px; /* Adiciona espaçamento interno aos links */
-            text-decoration: none; /* Remove o sublinhado dos links */
-            white-space: nowrap; /* Impede que o texto dos links quebre em várias linhas */
+            color: #fff;
+            /* Define a cor do texto dos links */
+            text-align: center;
+            /* Centraliza o texto dos links */
+            padding: 14px 20px;
+            /* Adiciona espaçamento interno aos links */
+            text-decoration: none;
+            /* Remove o sublinhado dos links */
+            white-space: nowrap;
+            /* Impede que o texto dos links quebre em várias linhas */
         }
 
         /* Estilo para o estado de foco dos links de navegação */
         nav a:hover {
-            background-color: #ddd; /* Altera a cor de fundo quando o link é focalizado */
-            color: black; /* Altera a cor do texto quando o link é focalizado */
+            background-color: #ddd;
+            /* Altera a cor de fundo quando o link é focalizado */
+            color: black;
+            /* Altera a cor do texto quando o link é focalizado */
         }
 
         /* Estilo para o container do conteúdo principal */
         .container {
-            flex: 1; /* Permite que o container cresça para preencher o espaço disponível */
-            box-sizing: border-box; /* Inclui o preenchimento e a borda no cálculo da largura e altura */
+            flex: 1;
+            /* Permite que o container cresça para preencher o espaço disponível */
+            box-sizing: border-box;
+            /* Inclui o preenchimento e a borda no cálculo da largura e altura */
         }
 
         /* Estilo para a área de conteúdo */
         .content {
-            text-align: center; /* Centraliza o texto dentro da área de conteúdo */
+            text-align: center;
+            /* Centraliza o texto dentro da área de conteúdo */
         }
 
         /* Estilo específico para a seção com a classe "title" */
         .title {
-            background-color: #e8e8e8; /* Define a cor de fundo da seção "title" */
+            background-color: #e8e8e8;
+            /* Define a cor de fundo da seção "title" */
         }
 
         /* Estilo para o conteúdo dentro da seção "title" */
         .title-content {
-            display: flex; /* Utiliza flexbox para layout */
-            justify-content: space-between; /* Distribui espaço entre itens */
-            padding-bottom: 60px; /* Adiciona espaço no fundo */
-            align-items: flex-start; /* Alinha itens no topo da seção */
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.07); /* Adiciona uma sombra sutil à seção */
+            display: flex;
+            /* Utiliza flexbox para layout */
+            justify-content: space-between;
+            /* Distribui espaço entre itens */
+            padding-bottom: 60px;
+            /* Adiciona espaço no fundo */
+            align-items: flex-start;
+            /* Alinha itens no topo da seção */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.07);
+            /* Adiciona uma sombra sutil à seção */
         }
 
         /* Estilo para os títulos dentro da seção "title" */
         .title h2 {
-            font-weight: 900; /* Define o peso da fonte como negrito */
-            margin-left: 89px; /* Adiciona um espaço à esquerda do título */
-            font-size: 60px; /* Define o tamanho da fonte do título */
-            margin-right: 50px; /* Adiciona um espaço à direita do título */
-            text-align: left; /* Alinha o texto à esquerda */
+            font-weight: 900;
+            /* Define o peso da fonte como negrito */
+            margin-left: 89px;
+            /* Adiciona um espaço à esquerda do título */
+            font-size: 60px;
+            /* Define o tamanho da fonte do título */
+            margin-right: 50px;
+            /* Adiciona um espaço à direita do título */
+            text-align: left;
+            /* Alinha o texto à esquerda */
         }
 
         /* Estilo para os parágrafos dentro da seção "title" */
         .title p {
-            flex: 1; /* Permite que o parágrafo cresça para preencher o espaço disponível */
-            font-size: 20px; /* Define o tamanho da fonte do parágrafo */
-            padding: 0 89px 50px; /* Adiciona espaçamento interno */
-            padding-right: 400px; /* Adiciona um espaço adicional à direita do parágrafo */
-            text-align: left; /* Alinha o texto à esquerda */
+            flex: 1;
+            /* Permite que o parágrafo cresça para preencher o espaço disponível */
+            font-size: 20px;
+            /* Define o tamanho da fonte do parágrafo */
+            padding: 0 89px 50px;
+            /* Adiciona espaçamento interno */
+            padding-right: 400px;
+            /* Adiciona um espaço adicional à direita do parágrafo */
+            text-align: left;
+            /* Alinha o texto à esquerda */
         }
 
         /* Estilo para as imagens dentro da seção "title" */
         .title img {
-            max-width: 500px; /* Define a largura máxima da imagem */
-            height: 400px; /* Define a altura da imagem */
-            border-radius: 10px; /* Adiciona bordas arredondadas à imagem */
-            margin-top: 100px; /* Adiciona um espaço no topo da imagem */
+            max-width: 500px;
+            /* Define a largura máxima da imagem */
+            height: 400px;
+            /* Define a altura da imagem */
+            border-radius: 10px;
+            /* Adiciona bordas arredondadas à imagem */
+            margin-top: 100px;
+            /* Adiciona um espaço no topo da imagem */
         }
 
         /* Estilo para a seção com a classe "img-left" */
         .img-left {
-            display: flex; /* Utiliza flexbox para layout */
-            align-items: flex-start; /* Alinha itens no topo da seção */
-            padding: 20px; /* Adiciona espaçamento interno */
-            background-color: #f3f4f6; /* Define a cor de fundo da seção */
+            display: flex;
+            /* Utiliza flexbox para layout */
+            align-items: flex-start;
+            /* Alinha itens no topo da seção */
+            padding: 20px;
+            /* Adiciona espaçamento interno */
+            background-color: #f3f4f6;
+            /* Define a cor de fundo da seção */
         }
 
         /* Estilo para os títulos dentro da seção "img-left" */
         .img-left h2 {
-            font-size: 40px; /* Define o tamanho da fonte do título */
-            text-align: center; /* Centraliza o texto do título */
+            font-size: 40px;
+            /* Define o tamanho da fonte do título */
+            text-align: center;
+            /* Centraliza o texto do título */
         }
 
         /* Estilo para os parágrafos dentro da seção "img-left" */
         .img-left p {
-            text-align: center; /* Centraliza o texto do parágrafo */
-            font-size: 18px; /* Define o tamanho da fonte do parágrafo */
-            margin-top: 70px; /* Adiciona um espaço no topo do parágrafo */
-            padding: 0px 100px 50px; /* Adiciona espaçamento interno */
+            text-align: center;
+            /* Centraliza o texto do parágrafo */
+            font-size: 18px;
+            /* Define o tamanho da fonte do parágrafo */
+            margin-top: 70px;
+            /* Adiciona um espaço no topo do parágrafo */
+            padding: 0px 100px 50px;
+            /* Adiciona espaçamento interno */
         }
 
         /* Estilo para as imagens dentro da seção "img-left" */
         .img-left img {
-            max-width: 400px; /* Define a largura máxima da imagem */
-            height: auto; /* Ajusta a altura automaticamente para manter a proporção */
-            margin-right: 40px; /* Adiciona um espaço à direita da imagem */
+            max-width: 400px;
+            /* Define a largura máxima da imagem */
+            height: auto;
+            /* Ajusta a altura automaticamente para manter a proporção */
+            margin-right: 40px;
+            /* Adiciona um espaço à direita da imagem */
         }
 
         /* Estilo para os elementos dentro da seção "img-left" */
         .img-left div {
-            text-align: left; /* Alinha o texto à esquerda dentro do div */
+            text-align: left;
+            /* Alinha o texto à esquerda dentro do div */
         }
 
         /* Estilo para botões */
         .button {
-            margin-right: 670px; /* Adiciona um espaço à direita do botão */
-            padding: 23px 32px; /* Adiciona espaçamento interno ao botão */
-            font-size: 20px; /* Define o tamanho da fonte do botão */
-            font-weight: bold; /* Define o texto como negrito */
-            color: #fff; /* Define a cor do texto do botão */
-            background-color: #282828; /* Define a cor de fundo do botão */
-            border: none; /* Remove a borda padrão do botão */
-            border-radius: 50px; /* Adiciona bordas arredondadas ao botão */
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Adiciona uma sombra ao botão */
-            cursor: pointer; /* Muda o cursor para uma mão ao passar sobre o botão */
-            transition: background-color 0.3s, transform 0.3s; /* Adiciona uma transição suave para a cor de fundo e escala */
+            margin-right: 670px;
+            /* Adiciona um espaço à direita do botão */
+            padding: 23px 32px;
+            /* Adiciona espaçamento interno ao botão */
+            font-size: 20px;
+            /* Define o tamanho da fonte do botão */
+            font-weight: bold;
+            /* Define o texto como negrito */
+            color: #fff;
+            /* Define a cor do texto do botão */
+            background-color: #282828;
+            /* Define a cor de fundo do botão */
+            border: none;
+            /* Remove a borda padrão do botão */
+            border-radius: 50px;
+            /* Adiciona bordas arredondadas ao botão */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            /* Adiciona uma sombra ao botão */
+            cursor: pointer;
+            /* Muda o cursor para uma mão ao passar sobre o botão */
+            transition: background-color 0.3s, transform 0.3s;
+            /* Adiciona uma transição suave para a cor de fundo e escala */
         }
 
         /* Estilo para o estado de foco dos botões */
         .button:hover {
-            background-color: #ddd; /* Altera a cor de fundo quando o botão é focalizado */
-            color: black; /* Altera a cor do texto quando o botão é focalizado */
-            transform: scale(1.05); /* Aumenta o tamanho do botão ao passar o cursor sobre ele */
+            background-color: #ddd;
+            /* Altera a cor de fundo quando o botão é focalizado */
+            color: black;
+            /* Altera a cor do texto quando o botão é focalizado */
+            transform: scale(1.05);
+            /* Aumenta o tamanho do botão ao passar o cursor sobre ele */
         }
 
         /* Estilo para links dentro dos botões */
         .button a {
-            text-decoration: none; /* Remove o sublinhado dos links */
-            color: #fff; /* Define a cor do texto dos links como branco */
+            text-decoration: none;
+            /* Remove o sublinhado dos links */
+            color: #fff;
+            /* Define a cor do texto dos links como branco */
         }
 
         /* Estilo para o rodapé */
         footer {
-            background-color: #1e1e1e; /* Define a cor de fundo do rodapé */
-            color: #a6a6a6; /* Define a cor do texto do rodapé */
-            width: 100%; /* Garante que o rodapé ocupe toda a largura da página */
-            padding: 0.5rem; /* Adiciona espaçamento interno ao rodapé */
-            box-sizing: border-box; /* Inclui o preenchimento e a borda no cálculo da largura e altura */
+            background-color: #1e1e1e;
+            /* Define a cor de fundo do rodapé */
+            color: #a6a6a6;
+            /* Define a cor do texto do rodapé */
+            width: 100%;
+            /* Garante que o rodapé ocupe toda a largura da página */
+            padding: 0.5rem;
+            /* Adiciona espaçamento interno ao rodapé */
+            box-sizing: border-box;
+            /* Inclui o preenchimento e a borda no cálculo da largura e altura */
             padding-bottom: 100px;
         }
 
         /* Estilo para os parágrafos dentro do rodapé */
         footer p {
-            color: whitesmoke; /* Define a cor do texto dos parágrafos como branco */
-            font-size: small; /* Define o tamanho da fonte dos parágrafos como pequeno */
-            text-align: left; /* Alinha o texto à esquerda */
-            margin: 20px; /* Adiciona margem ao redor dos parágrafos */
+            color: whitesmoke;
+            /* Define a cor do texto dos parágrafos como branco */
+            font-size: small;
+            /* Define o tamanho da fonte dos parágrafos como pequeno */
+            text-align: left;
+            /* Alinha o texto à esquerda */
+            margin: 20px;
+            /* Adiciona margem ao redor dos parágrafos */
         }
 
         /* Estilo para links dentro do rodapé */
         footer a {
-            text-decoration: none; /* Remove o sublinhado dos links */
-            color: #a6a6a6; /* Define a cor do texto dos links */
+            text-decoration: none;
+            /* Remove o sublinhado dos links */
+            color: #a6a6a6;
+            /* Define a cor do texto dos links */
         }
 
         /* Estilo para o título dentro do rodapé */
         .ptitle {
-            color: #a6a6a6; /* Define a cor do texto do título */
-            font-weight: bold; /* Define o texto como negrito */
-            font-size: large; /* Define o tamanho da fonte do título como grande */
-            text-align: left; /* Alinha o texto à esquerda */
-            padding-bottom: 10px; /* Adiciona espaçamento no fundo do título */
-            margin: 20px; /* Adiciona margem ao redor do título */
+            color: #a6a6a6;
+            /* Define a cor do texto do título */
+            font-weight: bold;
+            /* Define o texto como negrito */
+            font-size: large;
+            /* Define o tamanho da fonte do título como grande */
+            text-align: left;
+            /* Alinha o texto à esquerda */
+            padding-bottom: 10px;
+            /* Adiciona espaçamento no fundo do título */
+            margin: 20px;
+            /* Adiciona margem ao redor do título */
         }
 
         /* Estilo para a seção com a classe "history" */
         .history {
-            background-color: #e8e8e8; /* Define a cor de fundo da seção */
+            background-color: #e8e8e8;
+            /* Define a cor de fundo da seção */
             padding: 100px;
         }
 
         /* Estilo para os parágrafos dentro da seção "history" */
         .history p {
-            text-align: center; /* Centraliza o texto */
-            font-size: 20px; /* Define o tamanho da fonte do parágrafo */
+            text-align: center;
+            /* Centraliza o texto */
+            font-size: 20px;
+            /* Define o tamanho da fonte do parágrafo */
         }
 
         /* Estilo para os títulos dentro da seção "history" */
         .history h2 {
-            margin: 0; /* Remove a margem padrão */
-            text-align: center; /* Centraliza o texto */
-            font-size: 35px; /* Define o tamanho da fonte do título */
+            margin: 0;
+            /* Remove a margem padrão */
+            text-align: center;
+            /* Centraliza o texto */
+            font-size: 35px;
+            /* Define o tamanho da fonte do título */
         }
     </style>
 </head>
@@ -273,8 +398,8 @@
     <div class="wrapper">
         <!-- Cabeçalho com logo e links de autenticação -->
         <header>
-            <div style="display: flex; align-items: center;">
-                <img class="logo" src="Imagens/Logo Supremo pequeno.png" alt="Logo Supremo Storage" />
+            <div style="display: flex; align-items: center">
+                <img class="logo" src="../estoque/Imagens/Logo Supremo pequeno.png" alt="Logo Supremo Storage" />
                 <h1>Supremo Storage</h1>
             </div>
             <div class="auth-links">
@@ -293,35 +418,42 @@
                             <div>
                                 <h2>Por que usar o nosso sistema?</h2>
                                 <p>
-                                    Nosso site foi desenvolvido com o objetivo de proporcionar a melhor experiência
-                                    possível para os usuários. Com uma interface intuitiva e de fácil navegação,
-                                    qualquer pessoa, independentemente de sua experiência prévia, poderá utilizá-lo
-                                    de forma simples e eficiente. Nossa missão é facilitar o acesso e o uso, garantindo
-                                    que todos possam aproveitar ao máximo as funcionalidades oferecidas.
+                                    Nosso site foi desenvolvido com o objetivo de proporcionar a
+                                    melhor experiência possível para os usuários. Com uma
+                                    interface intuitiva e de fácil navegação, qualquer pessoa,
+                                    independentemente de sua experiência prévia, poderá
+                                    utilizá-lo de forma simples e eficiente. Nossa missão é
+                                    facilitar o acesso e o uso, garantindo que todos possam
+                                    aproveitar ao máximo as funcionalidades oferecidas.
                                 </p>
-                                <button class="button"><a href="user/login.php">Experimente!</a></button>
+                                <button class="button">
+                                    <a href="user/login.php">Experimente!</a>
+                                </button>
                             </div>
-                            <img src="Imagens/WomanBox.png" alt="Womanbox">
+                            <img src="Imagens/WomanBox.png" alt="Womanbox" />
                         </div>
                     </div>
                 </div>
 
                 <!-- Seção com imagem à esquerda e texto à direita -->
                 <div class="img-left">
-                    <img src="Imagens/BadBox.png" alt="PostureBox">
+                    <img src="Imagens/BadBox.png" alt="PostureBox" />
                     <div>
                         <h2>Veja como o trabalho fica mais fácil!</h2>
                         <p>
-                            Um site intuitivo oferece diversas vantagens significativas. Ele garante que qualquer
-                            pessoa, independentemente de sua experiência tecnológica, possa navegar e utilizar a plataforma com
-                            facilidade. Isso não só amplia a acessibilidade, mas também aumenta o engajamento, pois os
-                            usuários encontram o que precisam de forma rápida e sem frustrações. Além disso, uma
-                            interface
-                            simples reduz a necessidade de suporte técnico, o que pode diminuir custos e melhorar a
-                            eficiência. Com uma navegação facilitada, as taxas de conversão tendem a subir, e a
-                            satisfação
-                            do usuário cresce, resultando em maior fidelização e recomendações positivas. Em resumo, um
-                            design intuitivo proporciona uma experiência agradável e eficaz para todos os usuários.
+                            Um site intuitivo oferece diversas vantagens significativas. Ele
+                            garante que qualquer pessoa, independentemente de sua
+                            experiência tecnológica, possa navegar e utilizar a plataforma
+                            com facilidade. Isso não só amplia a acessibilidade, mas também
+                            aumenta o engajamento, pois os usuários encontram o que precisam
+                            de forma rápida e sem frustrações. Além disso, uma interface
+                            simples reduz a necessidade de suporte técnico, o que pode
+                            diminuir custos e melhorar a eficiência. Com uma navegação
+                            facilitada, as taxas de conversão tendem a subir, e a satisfação
+                            do usuário cresce, resultando em maior fidelização e
+                            recomendações positivas. Em resumo, um design intuitivo
+                            proporciona uma experiência agradável e eficaz para todos os
+                            usuários.
                         </p>
                     </div>
                 </div>
@@ -330,14 +462,15 @@
                 <div class="history">
                     <h2>Nossa história</h2>
                     <p>
-                        Este site foi desenvolvido como parte do nosso trabalho de conclusão de curso, com o objetivo de
-                        proporcionar uma experiência simples e acessível para todos. Nossa missão é garantir que
-                        qualquer pessoa possa utilizar a plataforma sem dificuldades, independentemente de suas
-                        habilidades técnicas.
-
-                        Acreditamos que a simplicidade é a chave para a eficácia e facilidade de uso. Por isso,
-                        projetamos o site com uma interface intuitiva e recursos descomplicados, visando tornar sua
-                        navegação a mais agradável possível.
+                        Este site foi desenvolvido como parte do nosso trabalho de
+                        conclusão de curso, com o objetivo de proporcionar uma experiência
+                        simples e acessível para todos. Nossa missão é garantir que
+                        qualquer pessoa possa utilizar a plataforma sem dificuldades,
+                        independentemente de suas habilidades técnicas. Acreditamos que a
+                        simplicidade é a chave para a eficácia e facilidade de uso. Por
+                        isso, projetamos o site com uma interface intuitiva e recursos
+                        descomplicados, visando tornar sua navegação a mais agradável
+                        possível.
                     </p>
                 </div>
             </div>
@@ -347,7 +480,8 @@
         <footer id="contato">
             <p class="ptitle">Entre em contato conosco</p>
             <p>
-                - Telefone: 45 99975-5243 ou pelo link <a href="https://wa.link/oj1m9n">AQUI</a>
+                - Telefone: 45 99975-5243 ou pelo link
+                <a href="https://wa.link/oj1m9n">AQUI</a>
             </p>
             <p>- Email: carlos.specia@escola.pr.gov.br</p>
         </footer>

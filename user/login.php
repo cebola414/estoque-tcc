@@ -48,14 +48,87 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         /* Estilo do cabeçalho */
         header {
             background-color: #1e1e1e;
-            color: #fff;
+            /* Define a cor de fundo do cabeçalho */
+            display: flex;
+            /* Utiliza flexbox para layout */
+            align-items: center;
+            /* Alinha itens verticalmente no centro */
+            justify-content: space-between;
+            /* Distribui espaço entre itens */
             padding: 10px;
-            text-align: center;
+            /* Adiciona espaçamento interno */
+            color: #a6a6a6;
+            /* Define a cor do texto */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            /* Adiciona uma sombra ao cabeçalho */
             position: relative;
+            /* Permite o uso de z-index */
+            z-index: 10;
+            /* Garante que o cabeçalho fique acima de outros elementos */
+            font-family: Arial, sans-serif;
+            /* Aplica a fonte Arial no cabeçalho */
         }
 
+        /* Estilo para a imagem do logo no cabeçalho */
+        header img.logo {
+            max-width: 65px;
+            /* Define a largura máxima do logo */
+            max-height: 65px;
+            /* Define a altura máxima do logo */
+        }
+
+        /* Estilo para o título principal no cabeçalho */
         header h1 {
-            font-size: 24px;
+            font-weight: 900;
+            font-size: 40px;
+            /* Define o tamanho da fonte do título */
+            margin: 0;
+            /* Remove a margem padrão */
+            color: #fff;
+            /* Define a cor do texto como branco */
+            padding-left: 15px;
+            /* Adiciona um espaço à esquerda do título */
+        }
+
+        header a {
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Estilo para os links de autenticação no cabeçalho */
+        .auth-links {
+            display: flex;
+            /* Utiliza flexbox para layout */
+            align-items: center;
+            /* Alinha itens verticalmente no centro */
+        }
+
+        /* Estilo para os links dentro da área de autenticação */
+        .auth-links a {
+            background-color: #1e1e1e;
+            /* Define a cor de fundo dos links */
+            color: #fff;
+            /* Define a cor do texto dos links */
+            padding: 10px 20px;
+            /* Adiciona espaçamento interno aos links */
+            margin-left: 10px;
+            /* Adiciona um espaço à esquerda dos links */
+            text-decoration: none;
+            /* Remove o sublinhado dos links */
+            border-radius: 5px;
+            /* Adiciona bordas arredondadas aos links */
+            font-weight: bold;
+            /* Define o texto como negrito */
+            transition: background-color 0.3s;
+            /* Adiciona uma transição suave para a cor de fundo */
+        }
+
+        /* Estilo para o estado de foco dos links de autenticação */
+        .auth-links a:hover {
+            background-color: #fff;
+            color: #1e1e1e;
+            /* Altera a cor de fundo quando o link é focalizado */
         }
 
         nav {
@@ -160,11 +233,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
     <header>
-        <h1>FAÇA O LOGIN</h1>
+        <div style="display: flex; align-items: center;">
+            <a href="../Index.html"> <img class="logo" src="../Imagens/Logo Supremo pequeno.png" alt="Logo Supremo Storage" />
+                <h1>Supremo Storage</h1>
+            </a>
+        </div>
+        <div class="auth-links">
+            <a href="../Index.html">Página Inicial</a>
+        </div>
     </header>
-    <nav>
-        <a href="../Index.html">Início</a>
-    </nav>
+
     <div class="login-container">
         <h1>Login</h1>
         <form action="#" method="post">
