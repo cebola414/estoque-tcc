@@ -2,18 +2,33 @@
 require_once '../includes/auth_check.php';
 require_once '../db/config.php';
 
-function getProducts($pdo, $userId) {
-    $stmt = $pdo->prepare("SELECT * FROM products WHERE user_id = ?");
-    $stmt->execute([$userId]);
+// Função para buscar produtos
+function getProducts($pdo, $userId, $searchQuery = '')
+{
+    $sql = "SELECT * FROM products WHERE user_id = ?";
+    $params = [$userId];
+
+    if (!empty($searchQuery)) {
+        $sql .= " AND (name LIKE ? OR description LIKE ?)";
+        $searchTerm = '%' . $searchQuery . '%';
+        $params[] = $searchTerm;
+        $params[] = $searchTerm;
+    }
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function getUser($pdo, $userId) {
+// Função para buscar usuário
+function getUser($pdo, $userId)
+{
     $stmt = $pdo->prepare("SELECT username FROM users WHERE id = ?");
     $stmt->execute([$userId]);
     return $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
+// Processar requisições POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
     $id = $_POST['id'] ?? null;
@@ -41,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
             break;
         case 'delete_selected':
-            $ids = json_decode($_POST['ids'], true);
+            $ids = explode(',', $_POST['ids']);
             if (is_array($ids) && count($ids) > 0) {
                 $placeholders = implode(',', array_fill(0, count($ids), '?'));
                 $stmt = $pdo->prepare("DELETE FROM products WHERE id IN ($placeholders) AND user_id = ?");
@@ -54,8 +69,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     exit();
 }
 
-$products = getProducts($pdo, $_SESSION['user_id']);
-$user = getUser($pdo, $_SESSION['user_id']);
+// Carregar produtos e usuário
+$searchQuery = $_GET['search'] ?? '';
+$userId = $_SESSION['user_id'];
+$products = getProducts($pdo, $userId, $searchQuery);
+$user = getUser($pdo, $userId);
+
+// Retornar tabela de produtos via AJAX
+if (isset($_GET['ajax']) && $_GET['ajax'] === 'true') {
+    foreach ($products as $product) {
+        echo '<tr>
+            <td><input type="checkbox" class="selectProduct" value="' . htmlspecialchars($product['id']) . '"></td>
+            <td>' . htmlspecialchars($product['id']) . '</td>
+            <td>' . htmlspecialchars($product['name']) . '</td>
+            <td>' . htmlspecialchars($product['description']) . '</td>
+            <td>' . htmlspecialchars($product['quantity']) . '</td>
+            <td>' . htmlspecialchars($product['supplier']) . '</td>
+            <td>
+                <button class="editButton" data-id="' . htmlspecialchars($product['id']) . '">Editar</button>
+                <button class="deleteButton" data-id="' . htmlspecialchars($product['id']) . '">Excluir</button>
+            </td>
+        </tr>';
+    }
+    exit();
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -91,7 +128,6 @@ $user = getUser($pdo, $_SESSION['user_id']);
             color: #fff;
             margin: 0;
             flex: 1;
-            /* Faz o título ocupar o espaço disponível */
         }
 
         .user-info {
@@ -112,24 +148,6 @@ $user = getUser($pdo, $_SESSION['user_id']);
 
         .buttonLogout:hover {
             background-color: #6b0000;
-        }
-
-        nav {
-            background-color: #333;
-            overflow: hidden;
-        }
-
-        nav a {
-            display: block;
-            color: #fff;
-            text-align: center;
-            padding: 14px;
-            text-decoration: none;
-        }
-
-        nav a:hover {
-            background-color: #ddd;
-            color: black;
         }
 
         .main-container {
@@ -154,7 +172,9 @@ $user = getUser($pdo, $_SESSION['user_id']);
 
         button,
         .buttonRed,
-        .buttonSave {
+        .buttonAdd,
+        .buttonSave,
+        .buttonSearch {
             width: 150px;
             height: 45px;
             font-size: 16px;
@@ -173,21 +193,35 @@ $user = getUser($pdo, $_SESSION['user_id']);
             color: #fff;
         }
 
+        .buttonRed:hover {
+            background-color: #6b0000;
+        }
+
+        .buttonAdd {
+            background-color: #00ac28;
+            color: #fff;
+        }
+
+        .buttonAdd:hover {
+            background-color: #006b19;
+        }
+
         .buttonSave {
             background-color: #00ac28;
             color: #fff;
         }
 
-        button:hover {
-            background-color: #2a2a2a;
-        }
-
-        .buttonRed:hover {
-            background-color: #6b0000;
-        }
-
         .buttonSave:hover {
             background-color: #006b19;
+        }
+
+        .buttonSearch {
+            background-color: #007BFF;
+            color: #fff;
+        }
+
+        .buttonSearch:hover {
+            background-color: #0056b3;
         }
 
         table {
@@ -221,150 +255,135 @@ $user = getUser($pdo, $_SESSION['user_id']);
         }
 
         /* Estilos para o modal */
-/* Estilo geral do modal */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, 0.5); /* Fundo semi-transparente */
-}
+        /* Estilo geral do modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
 
-/* Estilo específico para o conteúdo do modal */
-.modal-content,
-.searchModal-content {
-    background-color: #ffffff;
-    margin: 5% auto; /* Ajusta a margem para centralizar verticalmente */
-    padding: 20px;
-    border: 1px solid #ddd;
-    width: 90%; /* Ajusta a largura para 90% da tela */
-    max-width: 800px; /* Define uma largura máxima */
-    border-radius: 8px; /* Bordas arredondadas */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra suave ao redor do modal */
-}
+        /* Estilo específico para o conteúdo do modal */
+        .modal-content,
+        .searchModal-content {
+            background-color: #ffffff;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            width: 90%;
+            max-width: 800px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
 
-/* Estilo para o botão de fechar do modal */
-.modal-content .close,
-.searchModal-content .close {
-    color: #888;
-    float: right;
-    font-size: 24px;
-    font-weight: bold;
-    cursor: pointer;
-}
+        /* Estilo para o botão de fechar do modal */
+        .modal-content .close,
+        .searchModal-content .close {
+            color: #888;
+            float: right;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+        }
 
-.modal-content .close:hover,
-.searchModal-content .close:hover,
-.modal-content .close:focus,
-.searchModal-content .close:focus {
-    color: #000;
-    text-decoration: none;
-}
+        .modal-content .close:hover,
+        .searchModal-content .close:hover,
+        .modal-content .close:focus,
+        .searchModal-content .close:focus {
+            color: #000;
+            text-decoration: none;
+        }
 
-/* Estilo do formulário dentro do modal */
-.modal-content form,
-.searchModal-content form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px; /* Espaçamento entre os elementos do formulário */
-}
+        /* Estilo do formulário dentro do modal */
+        .modal-content form,
+        .searchModal-content form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
 
-/* Estilo dos campos do formulário */
-.modal-content label,
-.searchModal-content label {
-    font-size: 16px;
-    margin-bottom: 8px;
-}
+        /* Estilo dos campos do formulário */
+        .modal-content label,
+        .searchModal-content label {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
 
-.modal-content input[type="text"],
-.searchModal-content input[type="text"],
-.modal-content input[type="number"],
-.searchModal-content input[type="number"],
-.modal-content textarea,
-.searchModal-content textarea {
-    width: calc(100% - 20px); /* Ajusta a largura considerando o padding */
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-sizing: border-box;
-    font-size: 14px;
-}
+        .modal-content input[type="text"],
+        .searchModal-content input[type="text"],
+        .modal-content input[type="number"],
+        .searchModal-content input[type="number"],
+        .modal-content textarea,
+        .searchModal-content textarea {
+            width: calc(100% - 20px);
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+        }
 
-.modal-content button,
-.searchModal-content button {
-    width: 100%;
-    padding: 12px;
-    background-color: #007bff; /* Cor de fundo do botão */
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Sombra suave ao redor do botão */
-}
+        .modal-content button,
+        .searchModal-content button {
+            width: 100%;
+            padding: 10px;
+            background-color: #00ac28;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
 
-.modal-content button:hover,
-.searchModal-content button:hover {
-    background-color: #0056b3; /* Cor do botão ao passar o mouse */
-}
+        .modal-content button:hover,
+        .searchModal-content button:hover {
+            background-color: #006b19;
+        }
 
-/* Estilo da tabela de resultados */
-.searchModal-content table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-}
+        /* Estilo da tabela de resultados no modal de busca */
+        .searchModal-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
 
-.searchModal-content th,
-.searchModal-content td {
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-}
+        .searchModal-content th,
+        .searchModal-content td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
 
-.searchModal-content th {
-    background-color: #f4f4f4;
-    color: #333;
-    font-weight: bold;
-}
-
-.searchModal-content tr:nth-child(even) {
-    background-color: #f9f9f9;
-}
-
-.searchModal-content tr:hover {
-    background-color: #e2e2e2; /* Cor de fundo ao passar o mouse sobre a linha */
-}
+        .searchModal-content th {
+            background-color: #f2f2f2;
+        }
     </style>
 </head>
 
 <body>
     <header>
-        <img class="logo" src="../Imagens/box.png" alt="Logo Box" />
-        <h1>Estoque</h1>
+        <img src="../assets/logo.png" alt="Logo" class="logo">
+        <h1>Cadastro de Produtos</h1>
         <div class="user-info">
-            <span>Bem-vindo, <?php echo htmlspecialchars($user['username']); ?>!</span>
-            <form action="../logout.php" method="POST" style="margin: 0;">
+            <span>Usuário: <?php echo htmlspecialchars($user['username']); ?></span>
+            <form action="../includes/logout.php" method="post">
                 <button type="submit" class="buttonLogout">Sair</button>
             </form>
         </div>
     </header>
-
     <div class="main-container">
         <div class="container">
             <div class="button-container">
-                <button id="openAddModalButton">Adicionar Produto</button>
-                <button id="deleteSelectedButton" class="buttonRed">Excluir Selecionados</button>
-                <button id="openSearchModalButton">Buscar Produtos</button>
+                <button id="addProduct" class="buttonAdd">Adicionar Produto</button>
+                <button id="searchProduct" class="buttonSearch">Pesquisar Produto</button>
+                <button id="deleteSelected" class="buttonRed">Excluir Selecionados</button>
             </div>
             <table>
                 <thead>
                     <tr>
-                        <th><input type="checkbox" id="selectAll" /></th>
+                        <th><input type="checkbox" id="selectAll"></th>
                         <th>ID</th>
                         <th>Nome</th>
                         <th>Descrição</th>
@@ -375,159 +394,156 @@ $user = getUser($pdo, $_SESSION['user_id']);
                 </thead>
                 <tbody>
                     <?php foreach ($products as $product) : ?>
-                    <tr>
-                        <td><input type="checkbox" class="productCheckbox" value="<?php echo htmlspecialchars($product['id']); ?>" /></td>
-                        <td><?php echo htmlspecialchars($product['id']); ?></td>
-                        <td><?php echo htmlspecialchars($product['name']); ?></td>
-                        <td><?php echo htmlspecialchars($product['description']); ?></td>
-                        <td><?php echo htmlspecialchars($product['quantity']); ?></td>
-                        <td><?php echo htmlspecialchars($product['supplier']); ?></td>
-                        <td>
-                            <button onclick='editProduct(<?php echo json_encode($product); ?>)'>Editar</button>
-                            <form action="product_register.php" method="POST" style="display:inline;">
-                                <input type="hidden" name="id" value="<?php echo htmlspecialchars($product['id']); ?>" />
-                                <input type="hidden" name="action" value="delete" />
-                                <button type="submit" class="buttonRed">Excluir</button>
-                            </form>
-                        </td>
-                    </tr>
+                        <tr>
+                            <td><input type="checkbox" class="selectProduct" value="<?php echo htmlspecialchars($product['id']); ?>"></td>
+                            <td><?php echo htmlspecialchars($product['id']); ?></td>
+                            <td><?php echo htmlspecialchars($product['name']); ?></td>
+                            <td><?php echo htmlspecialchars($product['description']); ?></td>
+                            <td><?php echo htmlspecialchars($product['quantity']); ?></td>
+                            <td><?php echo htmlspecialchars($product['supplier']); ?></td>
+                            <td>
+                                <button class="editButton" data-id="<?php echo htmlspecialchars($product['id']); ?>">Editar</button>
+                                <button class="deleteButton" data-id="<?php echo htmlspecialchars($product['id']); ?>">Excluir</button>
+                            </td>
+                        </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <!-- Modal Adicionar Produto -->
-    <div id="addModal" class="modal">
+    <!-- Modal de Adicionar Produto -->
+    <div id="productModal" class="modal">
         <div class="modal-content">
-            <span class="close" id="closeAddModal">&times;</span>
-            <h2>Adicionar Novo Produto</h2>
-            <form action="product_register.php" method="POST">
-                <input type="hidden" name="action" value="add" />
-                <label for="name">Nome:</label>
-                <input type="text" id="name" name="name" required />
+            <span class="close">&times;</span>
+            <h2>Adicionar Produto</h2>
+            <form action="product_register.php" method="post">
+                <input type="hidden" name="action" value="add">
+                <label for="name">Nome do Produto:</label>
+                <input type="text" id="name" name="name" required>
+
                 <label for="description">Descrição:</label>
                 <textarea id="description" name="description" required></textarea>
+
                 <label for="quantity">Quantidade:</label>
-                <input type="number" id="quantity" name="quantity" required />
+                <input type="number" id="quantity" name="quantity" required>
+
                 <label for="supplier">Fornecedor:</label>
-                <input type="text" id="supplier" name="supplier" required />
-                <button type="submit" class="buttonSave">Adicionar</button>
+                <input type="text" id="supplier" name="supplier" required>
+
+                <button type="submit">Salvar</button>
             </form>
         </div>
     </div>
 
-    <!-- Modal Editar Produto -->
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <span class="close" id="closeEditModal">&times;</span>
-            <h2>Editar Produto</h2>
-            <form action="product_register.php" method="POST">
-                <input type="hidden" name="action" value="update" />
-                <input type="hidden" id="editId" name="id" />
-                <label for="editName">Nome:</label>
-                <input type="text" id="editName" name="name" required />
-                <label for="editDescription">Descrição:</label>
-                <textarea id="editDescription" name="description" required></textarea>
-                <label for="editQuantity">Quantidade:</label>
-                <input type="number" id="editQuantity" name="quantity" required />
-                <label for="editSupplier">Fornecedor:</label>
-                <input type="text" id="editSupplier" name="supplier" required />
-                <button type="submit" class="buttonSave">Salvar</button>
+    <!-- Modal de Pesquisa de Produto -->
+    <div id="searchModal" class="modal">
+        <div class="searchModal-content">
+            <span class="close">&times;</span>
+            <h2>Pesquisar Produto</h2>
+            <form id="searchForm">
+                <label for="search">Nome ou Descrição:</label>
+                <input type="text" id="search" name="search" required>
+                <button type="submit">Pesquisar</button>
             </form>
         </div>
     </div>
-
- <!-- Modal Buscar Produto -->
-<div id="searchModal" class="modal">
-    <div class="searchModal-content">
-        <span class="close" id="closeSearchModal">&times;</span>
-        <h2>Buscar Produtos</h2>
-        <form id="searchForm" action="product_search.php" method="GET">
-            <label for="search">Nome do Produto:</label>
-            <input type="text" id="search" name="search" />
-            <button type="button" id="searchButton" class="buttonSave">Buscar</button>
-        </form>
-        <table id="searchResults">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nome</th>
-                    <th>Descrição</th>
-                    <th>Quantidade</th>
-                    <th>Fornecedor</th>
-                </tr>
-            </thead>
-            <tbody id="searchResultsBody">
-                <!-- Resultados da busca serão exibidos aqui -->
-            </tbody>
-        </table>
-    </div>
-</div>
 
     <script>
-        document.getElementById('openAddModalButton').addEventListener('click', function() {
-            document.getElementById('addModal').style.display = 'block';
-        });
+        const productModal = document.getElementById('productModal');
+        const searchModal = document.getElementById('searchModal');
+        const closeProductModal = productModal.querySelector('.close');
+        const closeSearchModal = searchModal.querySelector('.close');
 
-        function editProduct(product) {
-            document.getElementById('editId').value = product.id;
-            document.getElementById('editName').value = product.name;
-            document.getElementById('editDescription').value = product.description;
-            document.getElementById('editQuantity').value = product.quantity;
-            document.getElementById('editSupplier').value = product.supplier;
-            document.getElementById('editModal').style.display = 'block';
-        }
+        document.getElementById('addProduct').onclick = () => productModal.style.display = 'block';
+        closeProductModal.onclick = () => productModal.style.display = 'none';
+        window.onclick = (event) => {
+            if (event.target == productModal) productModal.style.display = 'none';
+        };
 
-        document.getElementById('closeAddModal').addEventListener('click', function() {
-            document.getElementById('addModal').style.display = 'none';
-        });
+        document.getElementById('searchForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const searchQuery = document.getElementById('search').value;
 
-        document.getElementById('closeEditModal').addEventListener('click', function() {
-            document.getElementById('editModal').style.display = 'none';
-        });
-
-        document.getElementById('closeSearchModal').addEventListener('click', function() {
-            document.getElementById('searchModal').style.display = 'none';
-        });
-
-        document.getElementById('openSearchModalButton').addEventListener('click', function() {
-            document.getElementById('searchModal').style.display = 'block';
-        });
-
-        document.getElementById('searchButton').addEventListener('click', function() {
-            const searchTerm = document.getElementById('search').value;
-            fetch(`product_search.php?search=${encodeURIComponent(searchTerm)}`)
+            fetch('product_register.php?ajax=true&search=' + encodeURIComponent(searchQuery))
                 .then(response => response.text())
                 .then(data => {
-                    document.getElementById('searchResultsBody').innerHTML = data;
-                });
+                    document.querySelector('tbody').innerHTML = data;
+                    searchModal.style.display = 'none';
+                })
+                .catch(error => console.error('Erro na pesquisa:', error));
         });
 
+        document.getElementById('searchProduct').onclick = () => searchModal.style.display = 'block';
+        closeSearchModal.onclick = () => searchModal.style.display = 'none';
+        window.onclick = (event) => {
+            if (event.target == searchModal) searchModal.style.display = 'none';
+        };
+
+        // Selecionar todos os checkboxes
         document.getElementById('selectAll').addEventListener('change', function() {
-            const checked = this.checked;
-            document.querySelectorAll('.productCheckbox').forEach(checkbox => {
-                checkbox.checked = checked;
+            const checkboxes = document.querySelectorAll('.selectProduct');
+            checkboxes.forEach(checkbox => checkbox.checked = this.checked);
+        });
+
+        // Excluir selecionados
+        document.getElementById('deleteSelected').addEventListener('click', function() {
+            const selectedIds = Array.from(document.querySelectorAll('.selectProduct:checked'))
+                .map(checkbox => checkbox.value)
+                .join(',');
+
+            if (selectedIds) {
+                if (confirm('Tem certeza que deseja excluir os produtos selecionados?')) {
+                    fetch('product_register.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            },
+                            body: new URLSearchParams({
+                                action: 'delete_selected',
+                                ids: selectedIds
+                            })
+                        })
+                        .then(() => {
+                            location.reload();
+                        })
+                        .catch(error => console.error('Erro ao excluir produtos:', error));
+                }
+            } else {
+                alert('Nenhum produto selecionado.');
+            }
+        });
+
+        // Editar produto
+        document.querySelectorAll('.editButton').forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                // Lógica para carregar o produto e abrir o modal de edição
+                alert('Funcionalidade de edição não implementada neste exemplo.');
             });
         });
 
-        document.getElementById('deleteSelectedButton').addEventListener('click', function() {
-            const selectedIds = Array.from(document.querySelectorAll('.productCheckbox:checked')).map(cb => cb.value);
-            if (selectedIds.length > 0) {
-                fetch('product_register.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: new URLSearchParams({
-                        action: 'delete_selected',
-                        ids: JSON.stringify(selectedIds)
-                    })
-                })
-                .then(() => location.reload());
-            } else {
-                alert('Selecione pelo menos um produto para excluir.');
-            }
+        // Excluir produto
+        document.querySelectorAll('.deleteButton').forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                if (confirm('Tem certeza que deseja excluir este produto?')) {
+                    fetch('product_register.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            },
+                            body: new URLSearchParams({
+                                action: 'delete',
+                                id: id
+                            })
+                        })
+                        .then(() => {
+                            location.reload();
+                        })
+                        .catch(error => console.error('Erro ao excluir produto:', error));
+                }
+            });
         });
     </script>
 </body>
