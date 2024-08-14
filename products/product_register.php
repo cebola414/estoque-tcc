@@ -79,7 +79,7 @@ $user = getUser($pdo, $userId);
 if (isset($_GET['ajax']) && $_GET['ajax'] === 'true') {
     foreach ($products as $product) {
         echo '<tr>
-            <td><input type="checkbox" class="selectProduct" value="' . htmlspecialchars($product['id']) . '"></td>
+            <td><input type="checkbox" name="select[]" value="' . htmlspecialchars($product['id']) . '"></td>
             <td>' . htmlspecialchars($product['id']) . '</td>
             <td>' . htmlspecialchars($product['name']) . '</td>
             <td>' . htmlspecialchars($product['description']) . '</td>
@@ -224,36 +224,6 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'true') {
             background-color: #0056b3;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        table,
-        th,
-        td {
-            border: 1px solid #ddd;
-        }
-
-        th,
-        td {
-            padding: 10px;
-            text-align: left;
-        }
-
-        th {
-            background-color: #f8f8f8;
-        }
-
-        .options-container {
-            width: 100%;
-            padding: 10px;
-            background-color: #fff;
-            display: grid;
-            flex-direction: column;
-        }
-
         /* Estilos para o modal */
         /* Estilo geral do modal */
         .modal {
@@ -317,73 +287,135 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'true') {
         .modal-content input[type="text"],
         .searchModal-content input[type="text"],
         .modal-content input[type="number"],
-        .searchModal-content input[type="number"],
-        .modal-content textarea,
-        .searchModal-content textarea {
-            width: calc(100% - 20px);
+        .searchModal-content input[type="number"] {
             padding: 10px;
-            border-radius: 4px;
             border: 1px solid #ddd;
+            border-radius: 5px;
             font-size: 16px;
         }
 
         .modal-content button,
         .searchModal-content button {
-            width: 100%;
-            padding: 10px;
-            background-color: #00ac28;
+            background-color: #007BFF;
             color: #fff;
             border: none;
+            padding: 10px;
             border-radius: 5px;
             cursor: pointer;
+            font-size: 16px;
         }
 
         .modal-content button:hover,
         .searchModal-content button:hover {
-            background-color: #006b19;
+            background-color: #0056b3;
         }
 
-        /* Estilo da tabela de resultados no modal de busca */
-        .searchModal-content table {
+        /* Estilo para a tabela de produtos */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: #fff;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f8f8f8;
+        }
+
+        /* Estilo para a tabela de resultados no modal */
+        #searchResults table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
         }
 
-        .searchModal-content th,
-        .searchModal-content td {
+        #searchResults th,
+        #searchResults td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 10px;
+            text-align: left;
         }
 
-        .searchModal-content th {
-            background-color: #f2f2f2;
+        #searchResults th {
+            background-color: #f8f8f8;
+        }
+
+        /* Ocultar a tabela de produtos quando não necessário */
+        #productTable {
+            display: table;
         }
     </style>
 </head>
 
 <body>
     <header>
-        <img src="../assets/logo.png" alt="Logo" class="logo">
+        <img src="../images/logo.png" alt="Logo" class="logo">
         <h1>Cadastro de Produtos</h1>
         <div class="user-info">
-            <span>Usuário: <?php echo htmlspecialchars($user['username']); ?></span>
-            <form action="../includes/logout.php" method="post">
+            <span>Bem-vindo, <?php echo htmlspecialchars($user['username']); ?>!</span>
+            <form action="../logout.php" method="post" style="margin: 0;">
                 <button type="submit" class="buttonLogout">Sair</button>
             </form>
         </div>
     </header>
+
     <div class="main-container">
-        <div class="container">
-            <div class="button-container">
-                <button id="addProduct" class="buttonAdd">Adicionar Produto</button>
-                <button id="searchProduct" class="buttonSearch">Pesquisar Produto</button>
-                <button id="deleteSelected" class="buttonRed">Excluir Selecionados</button>
+        <!-- Botão para abrir o modal de cadastro de produto -->
+        <div class="button-container">
+            <button id="addProductButton" class="buttonAdd">Adicionar Produto</button>
+            <button id="searchButton" class="buttonSearch">Pesquisar</button>
+            <button id="deleteSelectedButton" class="buttonRed">Excluir Selecionados</button>
+        </div>
+
+        <!-- Modal de Cadastro de Produto -->
+        <div id="productModal" class="modal">
+            <div class="modal-content">
+                <span class="close" id="productModalClose">&times;</span>
+                <h2>Adicionar Produto</h2>
+                <form id="productForm" method="post" action="">
+                    <input type="hidden" name="action" value="add">
+                    <label for="name">Nome:</label>
+                    <input type="text" id="name" name="name" required>
+                    <label for="description">Descrição:</label>
+                    <input type="text" id="description" name="description" required>
+                    <label for="quantity">Quantidade:</label>
+                    <input type="number" id="quantity" name="quantity" required>
+                    <label for="supplier">Fornecedor:</label>
+                    <input type="text" id="supplier" name="supplier" required>
+                    <button type="submit" class="buttonAdd">Adicionar</button>
+                </form>
             </div>
-            <table>
+        </div>
+
+        <!-- Modal de Pesquisa de Produto -->
+        <div id="searchModal" class="modal">
+            <div class="searchModal-content">
+                <span class="close" id="searchModalClose">&times;</span>
+                <h2>Pesquisar Produto</h2>
+                <form id="searchForm">
+                    <label for="search">Nome ou Descrição:</label>
+                    <input type="text" id="search" name="search" required>
+                    <button type="submit" class="buttonSearch">Pesquisar</button>
+                </form>
+                <div id="searchResults">
+                    <!-- Resultados da pesquisa serão exibidos aqui -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela de Produtos -->
+        <div class="container">
+            <h2>Lista de Produtos</h2>
+            <table id="productTable">
                 <thead>
                     <tr>
-                        <th><input type="checkbox" id="selectAll"></th>
+                        <th><input type="checkbox" id="selectAll"></th> <!-- Caixa de seleção para selecionar todos -->
                         <th>ID</th>
                         <th>Nome</th>
                         <th>Descrição</th>
@@ -393,9 +425,9 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'true') {
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($products as $product) : ?>
+                    <?php foreach ($products as $product): ?>
                         <tr>
-                            <td><input type="checkbox" class="selectProduct" value="<?php echo htmlspecialchars($product['id']); ?>"></td>
+                            <td><input type="checkbox" name="select[]" value="<?php echo htmlspecialchars($product['id']); ?>"></td>
                             <td><?php echo htmlspecialchars($product['id']); ?></td>
                             <td><?php echo htmlspecialchars($product['name']); ?></td>
                             <td><?php echo htmlspecialchars($product['description']); ?></td>
@@ -412,55 +444,41 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'true') {
         </div>
     </div>
 
-    <!-- Modal de Adicionar Produto -->
-    <div id="productModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Adicionar Produto</h2>
-            <form action="product_register.php" method="post">
-                <input type="hidden" name="action" value="add">
-                <label for="name">Nome do Produto:</label>
-                <input type="text" id="name" name="name" required>
-
-                <label for="description">Descrição:</label>
-                <textarea id="description" name="description" required></textarea>
-
-                <label for="quantity">Quantidade:</label>
-                <input type="number" id="quantity" name="quantity" required>
-
-                <label for="supplier">Fornecedor:</label>
-                <input type="text" id="supplier" name="supplier" required>
-
-                <button type="submit">Salvar</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal de Pesquisa de Produto -->
-    <div id="searchModal" class="modal">
-        <div class="searchModal-content">
-            <span class="close">&times;</span>
-            <h2>Pesquisar Produto</h2>
-            <form id="searchForm">
-                <label for="search">Nome ou Descrição:</label>
-                <input type="text" id="search" name="search" required>
-                <button type="submit">Pesquisar</button>
-            </form>
-        </div>
-    </div>
-
     <script>
-        const productModal = document.getElementById('productModal');
-        const searchModal = document.getElementById('searchModal');
-        const closeProductModal = productModal.querySelector('.close');
-        const closeSearchModal = searchModal.querySelector('.close');
+        // Função para abrir e fechar o modal
+        var productModal = document.getElementById("productModal");
+        var searchModal = document.getElementById("searchModal");
+        var addProductButton = document.getElementById("addProductButton");
+        var searchButton = document.getElementById("searchButton");
+        var productModalClose = document.getElementById("productModalClose");
+        var searchModalClose = document.getElementById("searchModalClose");
 
-        document.getElementById('addProduct').onclick = () => productModal.style.display = 'block';
-        closeProductModal.onclick = () => productModal.style.display = 'none';
-        window.onclick = (event) => {
-            if (event.target == productModal) productModal.style.display = 'none';
-        };
+        addProductButton.onclick = function() {
+            productModal.style.display = "block";
+        }
 
+        searchButton.onclick = function() {
+            searchModal.style.display = "block";
+        }
+
+        productModalClose.onclick = function() {
+            productModal.style.display = "none";
+        }
+
+        searchModalClose.onclick = function() {
+            searchModal.style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            if (event.target == productModal) {
+                productModal.style.display = "none";
+            }
+            if (event.target == searchModal) {
+                searchModal.style.display = "none";
+            }
+        }
+
+        // Função para pesquisar produtos e exibir no modal
         document.getElementById('searchForm').addEventListener('submit', function(event) {
             event.preventDefault();
             const searchQuery = document.getElementById('search').value;
@@ -468,82 +486,57 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'true') {
             fetch('product_register.php?ajax=true&search=' + encodeURIComponent(searchQuery))
                 .then(response => response.text())
                 .then(data => {
-                    document.querySelector('tbody').innerHTML = data;
-                    searchModal.style.display = 'none';
+                    document.getElementById('searchResults').innerHTML = `
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>ID</th>
+                                    <th>Nome</th>
+                                    <th>Descrição</th>
+                                    <th>Quantidade</th>
+                                    <th>Fornecedor</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>${data}</tbody>
+                        </table>
+                    `;
                 })
                 .catch(error => console.error('Erro na pesquisa:', error));
         });
 
-        document.getElementById('searchProduct').onclick = () => searchModal.style.display = 'block';
-        closeSearchModal.onclick = () => searchModal.style.display = 'none';
-        window.onclick = (event) => {
-            if (event.target == searchModal) searchModal.style.display = 'none';
-        };
-
-        // Selecionar todos os checkboxes
+        // Função para selecionar/deselecionar todos os produtos
         document.getElementById('selectAll').addEventListener('change', function() {
-            const checkboxes = document.querySelectorAll('.selectProduct');
-            checkboxes.forEach(checkbox => checkbox.checked = this.checked);
+            const checked = this.checked;
+            document.querySelectorAll('input[name="select[]"]').forEach(checkbox => {
+                checkbox.checked = checked;
+            });
         });
 
-        // Excluir selecionados
-        document.getElementById('deleteSelected').addEventListener('click', function() {
-            const selectedIds = Array.from(document.querySelectorAll('.selectProduct:checked'))
-                .map(checkbox => checkbox.value)
-                .join(',');
+        // Função para excluir produtos selecionados
+        document.getElementById('deleteSelectedButton').addEventListener('click', function() {
+            const selectedIds = Array.from(document.querySelectorAll('input[name="select[]"]:checked'))
+                .map(input => input.value);
 
-            if (selectedIds) {
-                if (confirm('Tem certeza que deseja excluir os produtos selecionados?')) {
-                    fetch('product_register.php', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded'
-                            },
-                            body: new URLSearchParams({
-                                action: 'delete_selected',
-                                ids: selectedIds
-                            })
-                        })
-                        .then(() => {
-                            location.reload();
-                        })
-                        .catch(error => console.error('Erro ao excluir produtos:', error));
-                }
-            } else {
-                alert('Nenhum produto selecionado.');
+            if (selectedIds.length === 0) {
+                alert('Nenhum item selecionado.');
+                return;
             }
-        });
 
-        // Editar produto
-        document.querySelectorAll('.editButton').forEach(button => {
-            button.addEventListener('click', function() {
-                const id = this.getAttribute('data-id');
-                // Lógica para carregar o produto e abrir o modal de edição
-                alert('Funcionalidade de edição não implementada neste exemplo.');
-            });
-        });
+            if (confirm('Você tem certeza que deseja excluir os itens selecionados?')) {
+                const formData = new FormData();
+                formData.append('action', 'delete_selected');
+                formData.append('ids', selectedIds.join(','));
 
-        // Excluir produto
-        document.querySelectorAll('.deleteButton').forEach(button => {
-            button.addEventListener('click', function() {
-                const id = this.getAttribute('data-id');
-                if (confirm('Tem certeza que deseja excluir este produto?')) {
-                    fetch('product_register.php', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded'
-                            },
-                            body: new URLSearchParams({
-                                action: 'delete',
-                                id: id
-                            })
-                        })
-                        .then(() => {
-                            location.reload();
-                        })
-                        .catch(error => console.error('Erro ao excluir produto:', error));
-                }
-            });
+                fetch('product_register.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.text())
+                .then(() => location.reload())
+                .catch(error => console.error('Erro ao excluir:', error));
+            }
         });
     </script>
 </body>
