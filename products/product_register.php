@@ -19,6 +19,14 @@ function getProducts($pdo, $userId, $searchQuery = '')
     $stmt->execute($params);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
+// Adicionar no início do arquivo PHP
+if (isset($_GET['id'])) {
+    $stmt = $pdo->prepare("SELECT * FROM products WHERE id = ? AND user_id = ?");
+    $stmt->execute([$_GET['id'], $_SESSION['user_id']]);
+    $product = $stmt->fetch(PDO::FETCH_ASSOC);
+    echo json_encode($product);
+    exit();
+}
 
 // Função para buscar usuário
 function getUser($pdo, $userId)
@@ -481,21 +489,23 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'true') {
 
             // Abre o modal de editar produto
             document.querySelectorAll('.editButton').forEach(button => {
-                button.addEventListener('click', function() {
-                    const id = this.getAttribute('data-id');
-                    // Carregar dados do produto via AJAX e preencher o formulário
-                    fetch('product_register.php?id=' + id)
-                        .then(response => response.json())
-                        .then(data => {
-                            document.getElementById('editId').value = data.id;
-                            document.getElementById('editName').value = data.name;
-                            document.getElementById('editDescription').value = data.description;
-                            document.getElementById('editQuantity').value = data.quantity;
-                            document.getElementById('editSupplier').value = data.supplier;
-                            document.getElementById('editModal').style.display = 'block';
-                        });
-                });
-            });
+    button.addEventListener('click', function() {
+        const id = this.getAttribute('data-id');
+        
+        // Carregar dados do produto via AJAX e preencher o formulário
+        fetch('product_register.php?id=' + id)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('editId').value = data.id;
+                document.getElementById('editName').value = data.name;
+                document.getElementById('editDescription').value = data.description;
+                document.getElementById('editQuantity').value = data.quantity;
+                document.getElementById('editSupplier').value = data.supplier;
+                document.getElementById('editModal').style.display = 'block';
+            })
+            .catch(error => console.error('Erro ao carregar dados do produto:', error));
+    });
+});
 
             // Fecha o modal de editar produto
             document.getElementById('editModalClose').addEventListener('click', function() {
@@ -609,25 +619,24 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'true') {
 
             // Excluir produto individualmente
             document.querySelectorAll('.deleteButton').forEach(button => {
-                button.addEventListener('click', function() {
-                    const id = this.getAttribute('data-id');
-                    if (confirm('Tem certeza de que deseja excluir este produto?')) {
-                        const formData = new FormData();
-                        formData.append('action', 'delete');
-                        formData.append('id', id);
+    button.addEventListener('click', function() {
+        const id = this.getAttribute('data-id');
+        if (confirm('Tem certeza de que deseja excluir este produto?')) {
+            const formData = new FormData();
+            formData.append('action', 'delete');
+            formData.append('id', id);
 
-                        fetch('product_register.php', {
-                            method: 'POST',
-                            body: formData
-                        })
-                        .then(response => response.text())
-                        .then(() => location.reload())
-                        .catch(error => console.error('Erro ao excluir produto:', error));
-                    }
-                });
-            });
+            fetch('product_register.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(() => location.reload())
+            .catch(error => console.error('Erro ao excluir produto:', error));
+        }
+    });
+});
         });
     </script>
 </body>
-
 </html>
