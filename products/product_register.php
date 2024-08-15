@@ -360,9 +360,9 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'true') {
         <h1>Cadastro de Produtos</h1>
         <div class="user-info">
             <span><?php echo htmlspecialchars($user['username']); ?></span>
-            <form action="logout.php" method="post">
-                <button type="submit" class="buttonLogout">Sair</button>
-            </form>
+            <form id="logoutForm" action="logout.php" method="post">
+    <button type="submit" class="buttonLogout">Sair</button>
+</form>
         </div>
     </header>
 
