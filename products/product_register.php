@@ -130,6 +130,7 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'true') {
         header img.logo {
             max-width: 45px;
             max-height: 45px;
+            margin-right: 12px;
         }
 
         header h1 {
