@@ -6,14 +6,11 @@ $error = ''; // Variável para armazenar a mensagem de erro
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'];
     $email = $_POST['email'];
-    $email_confirm = $_POST['email-confirm']; // Campo de confirmação de e-mail
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm-password']; // Campo de confirmação de senha
 
-    // Verifica se os e-mails coincidem
-    if ($email !== $email_confirm) {
-        $error = 'Os e-mails não coincidem. Por favor, tente novamente.';
-    } elseif ($password !== $confirm_password) {
+    // Verifica se as senhas coincidem
+    if ($password !== $confirm_password) {
         $error = 'As senhas não coincidem. Por favor, tente novamente.';
     } else {
         // Verifica se o usuário ou e-mail já existe
@@ -32,7 +29,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$username, $password_hash, $email]);
 
             // Aqui você pode enviar um e-mail de confirmação, se desejar
-            // Exemplo básico: 
             $to = $email;
             $subject = "Confirmação de Cadastro";
             $message = "Obrigado por se cadastrar. Por favor, clique no link abaixo para confirmar seu e-mail.";
@@ -47,17 +43,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro de Usuário</title>
-</head>
-<body>
-
-<style>
+    <style>
         * {
             margin: 0;
             padding: 0;
@@ -72,96 +64,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background-color: #f3f4f6;
         }
 
-
         header {
-            background-color: #1e1e1e; /* Define a cor de fundo do cabeçalho */
-            display: flex; /* Utiliza flexbox para layout */
-            align-items: center; /* Alinha itens verticalmente no centro */
-            justify-content: space-between; /* Distribui espaço entre itens */
-            padding: 10px; /* Adiciona espaçamento interno */
-            color: #a6a6a6; /* Define a cor do texto */
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3); /* Adiciona uma sombra ao cabeçalho */
-            position: relative; /* Permite o uso de z-index */
-            z-index: 10; /* Garante que o cabeçalho fique acima de outros elementos */
-            font-family: Arial, sans-serif; /* Aplica a fonte Arial no cabeçalho */
+            background-color: #1e1e1e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            color: #a6a6a6;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 10;
         }
-        header a{
+        header a {
             text-decoration: none;
             display: flex;
             align-items: center;
         }
 
-        /* Estilo para a imagem do logo no cabeçalho */
         header img.logo {
-            max-width: 65px; /* Define a largura máxima do logo */
-            max-height: 65px; /* Define a altura máxima do logo */
+            max-width: 65px;
+            max-height: 65px;
         }
 
-        /* Estilo para o título principal no cabeçalho */
         header h1 {
-        font-weight: 900;
-            font-size: 40px; /* Define o tamanho da fonte do título */
-            margin: 0; /* Remove a margem padrão */
-            color: #fff; /* Define a cor do texto como branco */
-            padding-left: 15px; /* Adiciona um espaço à esquerda do título */
-        }
-                /* Estilo para os links de autenticação no cabeçalho */
-                .auth-links {
-            display: flex; /* Utiliza flexbox para layout */
-            align-items: center; /* Alinha itens verticalmente no centro */
+            font-weight: 900;
+            font-size: 40px;
+            margin: 0;
+            color: #fff;
+            padding-left: 15px;
         }
 
-        /* Estilo para os links dentro da área de autenticação */
+        .auth-links {
+            display: flex;
+            align-items: center;
+        }
+
         .auth-links a {
             background-color: #1e1e1e;
-            /* Define a cor de fundo dos links */
             color: #fff;
-            /* Define a cor do texto dos links */
             padding: 10px 20px;
-            /* Adiciona espaçamento interno aos links */
             margin-left: 10px;
-            /* Adiciona um espaço à esquerda dos links */
             text-decoration: none;
-            /* Remove o sublinhado dos links */
             border-radius: 5px;
-            /* Adiciona bordas arredondadas aos links */
             font-weight: bold;
-            /* Define o texto como negrito */
             transition: background-color 0.3s;
-            /* Adiciona uma transição suave para a cor de fundo */
         }
 
-        /* Estilo para o estado de foco dos links de autenticação */
         .auth-links a:hover {
             background-color: #fff;
             color: #1e1e1e;
-            /* Altera a cor de fundo quando o link é focalizado */
-        }
-
-        .nav {
-            background-color: #282828;
-            display: flex;
-            /* Usa flexbox para alinhar os links */
-            justify-content: center;
-            /* Centraliza os links */
-            flex-wrap: wrap;
-            background-color: #282828;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-        }
-
-        .nav a {
-            color: #fff;
-            text-align: center;
-            padding: 10px;
-            text-decoration: none;
-            white-space: nowrap;
-
-        }
-
-        .nav a:hover {
-            color: #ddd;
-            color: black;
         }
 
         .register-container {
@@ -173,7 +124,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border-radius: 8px;
             text-align: center;
         }
-
 
         h1 {
             font-size: 24px;
@@ -231,7 +181,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color: #a6a6a6;
         }
     </style>
-
 </head>
 <body>
 
