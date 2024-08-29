@@ -28,11 +28,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $pdo->prepare("INSERT INTO users (username, password, email) VALUES (?, ?, ?)");
             $stmt->execute([$username, $password_hash, $email]);
 
-            // Aqui você pode enviar um e-mail de confirmação, se desejar
-            $to = $email;
-            $subject = "Confirmação de Cadastro";
-            $message = "Obrigado por se cadastrar. Por favor, clique no link abaixo para confirmar seu e-mail.";
-            $headers = "From: no-reply@supremostorage.com";
 
             mail($to, $subject, $message, $headers);
 

@@ -19,7 +19,8 @@ function getProducts($pdo, $userId, $searchQuery = '')
     $stmt->execute($params);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
-// Adicionar no início do arquivo PHP
+
+// Carregar produto por ID (via AJAX)
 if (isset($_GET['id'])) {
     $stmt = $pdo->prepare("SELECT * FROM products WHERE id = ? AND user_id = ?");
     $stmt->execute([$_GET['id'], $_SESSION['user_id']]);
@@ -87,7 +88,6 @@ $user = getUser($pdo, $userId);
 if (isset($_GET['ajax']) && $_GET['ajax'] === 'true') {
     foreach ($products as $product) {
         echo '<tr>
-            <td><input type="checkbox" name="select[]" value="' . htmlspecialchars($product['id']) . '"></td>
             <td>' . htmlspecialchars($product['id']) . '</td>
             <td>' . htmlspecialchars($product['name']) . '</td>
             <td>' . htmlspecialchars($product['description']) . '</td>
@@ -111,533 +111,516 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'true') {
     <title>Cadastro de Produtos</title>
     <style>
         /* Estilos gerais */
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-        }
+ /* Estilos globais */
+/* Estilos gerais */
+/* Estilos gerais */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
 
-        header {
-            background-color: #1e1e1e;
-            display: flex;
-            justify-content: space-between;
-            color: #a6a6a6;
-            padding: 10px 20px;
-            align-items: center;
-        }
+/* Estilos do cabeçalho */
+header {
+    background-color: #1e1e1e;
+    display: flex;
+    justify-content: space-between;
+    color: #a6a6a6;
+    padding: 10px 20px;
+    align-items: center;
+}
 
-        header img.logo {
-            max-width: 45px;
-            max-height: 45px;
-            margin-right: 12px;
-        }
+header img.logo {
+    max-width: 45px;
+    max-height: 45px;
+    margin-right: 12px;
+}
 
-        header h1 {
-            color: #fff;
-            margin: 0;
-            flex: 1;
-        }
+header h1 {
+    color: #fff;
+    margin: 0;
+    flex: 1;
+}
 
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
 
-        .buttonLogout {
-            background-color: #ce0000;
-            color: #fff;
-            border: none;
-            padding: 5px 10px;
-            font-size: 14px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
+.buttonLogout {
+    display: flex;
+    align-items: center;
+    background-color: #ce0000;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    font-size: 14px;
+    border-radius: 5px;
+    cursor: pointer;
+}
 
-        .buttonLogout:hover {
-            background-color: #6b0000;
-        }
+.imglogout {
+    max-width: 19px;
+    max-height: 19px;
+    margin-right: 8px;
+    margin-left: 37px;
+}
 
-        .main-container {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin: 20px;
-        }
+.buttonLogout:hover {
+    background-color: #6b0000;
+}
 
-        .container {
-            background-color: #fff;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
+/* Container principal */
+.main-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 20px;
+}
 
-        .button-container {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
+.container {
+    background-color: #fff;
+    padding: 20px;
+    margin-bottom: 20px;
+}
 
-        button,
-        .buttonRed,
-        .buttonAdd,
-        .buttonSave,
-        .buttonSearch {
-            width: 150px;
-            height: 45px;
-            font-size: 16px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
+/* Contêiner dos botões */
+.button-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
 
-        button {
-            background-color: #393939;
-            color: #fff;
-        }
+/* Estilos dos botões */
+button,
+.buttonRed,
+.buttonAdd,
+.buttonSave,
+.buttonSearch,
+.buttonEditarModal {
+    width: 150px;
+    height: 45px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
 
-        .buttonRed {
-            background-color: #ce0000;
-            color: #fff;
-        }
+button {
+    background-color: #393939;
+    color: #fff;
+}
 
-        .buttonRed:hover {
-            background-color: #6b0000;
-        }
+.buttonRed {
+    background-color: #ce0000;
+    color: #fff;
+}
 
-        .buttonAdd {
-            background-color: #00ac28;
-            color: #fff;
-        }
+.buttonRed:hover {
+    background-color: #6b0000;
+}
 
-        .buttonAdd:hover {
-            background-color: #006b19;
-        }
+.buttonAdd {
+    background-color: #00ac28;
+    color: #fff;
+}
 
-        .buttonSave {
-            background-color: #00ac28;
-            color: #fff;
-        }
+.buttonAdd:hover {
+    background-color: #006b19;
+}
 
-        .buttonSave:hover {
-            background-color: #006b19;
-        }
+.buttonSave {
+    background-color: #00ac28;
+    color: #fff;
+}
 
-        .buttonSearch {
-            background-color: #007BFF;
-            color: #fff;
-        }
+.buttonSave:hover {
+    background-color: #006b19;
+}
 
-        .buttonSearch:hover {
-            background-color: #0056b3;
-        }
+.buttonSearch {
+    background-color: #007BFF;
+    color: #fff;
+}
 
-        /* Estilos para o modal */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
+.buttonSearch:hover {
+    background-color: #0056b3;
+}
 
-        /* Estilo específico para o conteúdo do modal */
-        .modal-content,
-        .searchModal-content {
-            background-color: #ffffff;
-            margin: 5% auto;
-            padding: 20px;
-            border: 1px solid #ddd;
-            width: 90%;
-            max-width: 800px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
+/* Estilos específicos para o botão "Editar Produto" dentro do modal */
+.buttonEditarModal {
+    background-color: #f39c12;
+}
 
-        /* Estilo para o botão de fechar do modal */
-        .modal-content .close,
-        .searchModal-content .close {
-            color: #888;
-            float: right;
-            font-size: 24px;
-            font-weight: bold;
-            cursor: pointer;
-        }
+.buttonEditarModal:hover {
+    background-color: #e67e22;
+}
 
-        .modal-content .close:hover,
-        .searchModal-content .close:hover,
-        .modal-content .close:focus,
-        .searchModal-content .close:focus {
-            color: #000;
-            text-decoration: none;
-        }
+/* Estilos para o modal */
+.modal,
+.searchModal {
+    display: none; 
+    position: fixed; 
+    z-index: 1; 
+    left: 0;
+    top: 0;
+    width: 100%; 
+    height: 100%; 
+    overflow: auto; 
+    background-color: rgba(0,0,0,0.4); 
+    padding-top: 60px; 
+}
 
-        /* Estilo do formulário dentro do modal */
-        .modal-content form,
-        .searchModal-content form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
+/* Estilo específico para o conteúdo do modal */
+.modal-content,
+.searchModal-content {
+    background-color: #ffffff;
+    margin: 10% auto; /* Aumentado para mais espaço superior e inferior */
+    padding: 20px; /* Aumentado para mais espaço interno */
+    border: 1px solid #ddd;
+    width: 90%;
+    max-width: 800px; /* Pode ser ajustado conforme necessário */
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
 
-        /* Estilo dos campos do formulário */
-        .modal-content label,
-        .searchModal-content label {
-            font-size: 16px;
-            margin-bottom: 8px;
-        }
+/* Estilo para o botão de fechar do modal */
+.modal-content .close,
+.searchModal-content .close {
+    color: #888;
+    float: right;
+    font-size: 20px; /* Reduzido para mais conforto */
+    font-weight: bold;
+    cursor: pointer;
+}
 
-        .modal-content input[type="text"],
-        .searchModal-content input[type="text"],
-        .modal-content input[type="number"],
-        .searchModal-content input[type="number"] {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 16px;
-        }
+.modal-content .close:hover,
+.searchModal-content .close:hover,
+.modal-content .close:focus,
+.searchModal-content .close:focus {
+    color: #000;
+    text-decoration: none;
+}
 
-        .modal-content button,
-        .searchModal-content button {
-            background-color: #007BFF;
-            color: #fff;
-            border: none;
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-        }
+/* Estilo do formulário dentro do modal */
+.modal-content form,
+.searchModal-content form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Aumentado para mais espaço entre os campos */
+}
 
-        .modal-content button:hover,
-        .searchModal-content button:hover {
-            background-color: #0056b3;
-        }
+/* Estilo dos campos do formulário */
+.modal-content label,
+.searchModal-content label {
+    font-size: 14px; /* Reduzido para mais conforto */
+    margin-bottom: 8px; /* Aumentado para mais espaço */
+}
 
-        /* Estilo para a mensagem de erro */
-        #noResults {
-            background-color: #f8d7da;
-            color: #721c24;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-        }
+.modal-content input[type="text"],
+.searchModal-content input[type="text"],
+.modal-content input[type="number"],
+.searchModal-content input[type="number"] {
+    padding: 10px; /* Aumentado para mais conforto */
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px; /* Reduzido para mais conforto */
+}
 
-        /* Estilo da tabela */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
+/* Estilo dos botões dentro do modal */
+.modal-content button,
+.searchModal-content button {
+    background-color: #007BFF;
+    color: #fff;
+    border: none;
+    padding: 10px; /* Aumentado para mais conforto */
+    border-radius: 5px;
+    font-size: 14px; /* Reduzido para mais conforto */
+    cursor: pointer;
+}
 
-        th,
-        td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
+.modal-content button:hover,
+.searchModal-content button:hover {
+    background-color: #0056b3;
+}
 
-        th {
-            background-color: #f4f4f4;
-        }
+/* Estilo para a mensagem de erro */
+#noResults {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 10px; /* Aumentado para mais conforto */
+    border-radius: 5px;
+    margin-top: 10px;
+}
 
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
+/* Estilo da tabela */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
 
-        tr:hover {
-            background-color: #e9e9e9;
-        }
+th,
+td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #f4f4f4;
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tr:hover {
+    background-color: #e9e9e9;
+}
     </style>
 </head>
 
 <body>
     <header>
-        <img src="../Imagens/box.png" class="logo" alt="Logo">
+        <img src="../Imagens/icons8-caixa-128.png" class="logo" alt="Logo">
         <h1>Cadastro de Produtos</h1>
         <div class="user-info">
             <span><?php echo htmlspecialchars($user['username']); ?></span>
             <form id="logoutForm" action="logout.php" method="post">
-    <button type="submit" class="buttonLogout">Sair</button>
-</form>
+                <button type="submit" class="buttonLogout"><img src="../imagens/icons8-logout-100.png" class="imglogout">Sair</button>
+            </form>
         </div>
     </header>
 
     <div class="main-container">
-        <div class="container">
-            <div class="button-container">
-                <button id="openAddModal" class="buttonAdd">Adicionar Produto</button>
-                <button id="openSearchModal" class="buttonSearch">Pesquisar</button>
-                <button id="deleteSelected" class="buttonRed">Excluir Selecionados</button>
-            </div>
-
-            <!-- Tabela de Produtos -->
-            <table id="productTable">
-                <thead>
-                    <tr>
-                        <th></th>
-                        <th>ID</th>
-                        <th>Nome</th>
-                        <th>Descrição</th>
-                        <th>Quantidade</th>
-                        <th>Fornecedor</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Os produtos serão carregados aqui via PHP -->
-                    <?php foreach ($products as $product): ?>
-                        <tr>
-                            <td><input type="checkbox" name="select[]" value="<?php echo htmlspecialchars($product['id']); ?>"></td>
-                            <td><?php echo htmlspecialchars($product['id']); ?></td>
-                            <td><?php echo htmlspecialchars($product['name']); ?></td>
-                            <td><?php echo htmlspecialchars($product['description']); ?></td>
-                            <td><?php echo htmlspecialchars($product['quantity']); ?></td>
-                            <td><?php echo htmlspecialchars($product['supplier']); ?></td>
-                            <td>
-                                <button class="editButton" data-id="<?php echo htmlspecialchars($product['id']); ?>">Editar</button>
-                                <button class="deleteButton" data-id="<?php echo htmlspecialchars($product['id']); ?>">Excluir</button>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+        <div class="button-container">
+            <button id="openAddModal" class="buttonAdd">Adicionar Produto</button>
+            <button id="openSearchModal" class="buttonSearch">Pesquisar</button>
+            <button id="deleteSelected" class="buttonRed">Excluir Selecionados</button>
         </div>
+
+        <!-- Tabela de Produtos -->
+        <table id="productTable">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Descrição</th>
+                    <th>Quantidade</th>
+                    <th>Fornecedor</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($products as $product): ?>
+                    <tr>
+                        <td><input type="checkbox" name="select[]" value="<?php echo htmlspecialchars($product['id']); ?>"></td>
+                        <td><?php echo htmlspecialchars($product['id']); ?></td>
+                        <td><?php echo htmlspecialchars($product['name']); ?></td>
+                        <td><?php echo htmlspecialchars($product['description']); ?></td>
+                        <td><?php echo htmlspecialchars($product['quantity']); ?></td>
+                        <td><?php echo htmlspecialchars($product['supplier']); ?></td>
+                        <td>
+                            <button class="editButton" data-id="<?php echo htmlspecialchars($product['id']); ?>">Editar</button>
+                            <button class="deleteButton" data-id="<?php echo htmlspecialchars($product['id']); ?>">Excluir</button>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
     </div>
 
     <!-- Modal de Adicionar Produto -->
     <div id="addModal" class="modal">
         <div class="modal-content">
-            <span class="close" id="addModalClose">&times;</span>
             <h2>Adicionar Produto</h2>
-            <form id="addForm">
-                <label for="addName">Nome:</label>
-                <input type="text" id="addName" name="name" required>
-
-                <label for="addDescription">Descrição:</label>
-                <input type="text" id="addDescription" name="description">
-
-                <label for="addQuantity">Quantidade:</label>
-                <input type="number" id="addQuantity" name="quantity" min="0" required>
-
-                <label for="addSupplier">Fornecedor:</label>
-                <input type="text" id="addSupplier" name="supplier">
-
-                <button type="submit" class="buttonSave">Salvar</button>
+            <form id="addProductForm" method="post">
+                <input type="hidden" name="action" value="add">
+                <label for="name">Nome:</label>
+                <input type="text" id="name" name="name" required><br>
+                <label for="description">Descrição:</label>
+                <input type="text" id="description" name="description" required><br>
+                <label for="quantity">Quantidade:</label>
+                <input type="number" id="quantity" name="quantity" required><br>
+                <label for="supplier">Fornecedor:</label>
+                <input type="text" id="supplier" name="supplier" required><br>
+                <button type="submit">Adicionar</button>
             </form>
         </div>
     </div>
 
-    <!-- Modal de Editar Produto -->
+    <!-- Modal de Edição de Produto -->
     <div id="editModal" class="modal">
         <div class="modal-content">
-            <span class="close" id="editModalClose">&times;</span>
             <h2>Editar Produto</h2>
-            <form id="editForm">
+            <form id="editProductForm" method="post">
+                <input type="hidden" name="action" value="update">
                 <input type="hidden" id="editId" name="id">
-                
                 <label for="editName">Nome:</label>
-                <input type="text" id="editName" name="name" required>
-
+                <input type="text" id="editName" name="name" required><br>
                 <label for="editDescription">Descrição:</label>
-                <input type="text" id="editDescription" name="description">
-
+                <input type="text" id="editDescription" name="description" required><br>
                 <label for="editQuantity">Quantidade:</label>
-                <input type="number" id="editQuantity" name="quantity" min="0" required>
-
+                <input type="number" id="editQuantity" name="quantity" required><br>
                 <label for="editSupplier">Fornecedor:</label>
-                <input type="text" id="editSupplier" name="supplier">
-
-                <button type="submit" class="buttonSave">Salvar</button>
+                <input type="text" id="editSupplier" name="supplier" required><br>
+                <button type="submit">Salvar</button>
             </form>
         </div>
     </div>
 
-    <!-- Modal de Pesquisa de Produto -->
-    <div id="searchModal" class="modal">
-        <div class="searchModal-content">
-            <span class="close" id="searchModalClose">&times;</span>
-            <h2>Pesquisar Produto</h2>
-            <form id="searchForm">
-                <label for="search">Nome ou Descrição:</label>
-                <input type="text" id="search" name="search" required>
-                <button type="submit" class="buttonSearch">Pesquisar</button>
-            </form>
-            <div id="noResults" style="display: none; background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-top: 10px;">
-                Nenhum produto encontrado
-            </div>
-            <div id="searchResults">
-                <!-- Resultados da pesquisa serão exibidos aqui -->
-            </div>
-        </div>
+ <!-- Modal de Pesquisa -->
+<div id="searchModal" class="modal">
+    <div class="modal-content">
+        <h2>Pesquisar Produtos</h2>
+        <form id="searchForm" method="get" action="product_register.php">
+            <label for="searchQuery">Nome ou Descrição:</label>
+            <input type="text" id="searchQuery" name="search" required>
+            <button type="submit">Pesquisar</button>
+        </form>
+        <div id="noResults">Nenhum produto encontrado.</div>
+        <table id="searchResults">
+            <!-- Cabeçalho da tabela (inicialmente escondido) -->
+            <thead style="display: none;">
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Descrição</th>
+                    <th>Quantidade</th>
+                    <th>Fornecedor</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <!-- Resultados da pesquisa serão inseridos aqui via JavaScript -->
+            <tbody></tbody>
+        </table>
     </div>
-
+</div>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Abre o modal de adicionar produto
-            document.getElementById('openAddModal').addEventListener('click', function() {
-                document.getElementById('addModal').style.display = 'block';
-            });
+        // Abrir modal de Adicionar Produto
+        document.getElementById('openAddModal').addEventListener('click', function() {
+            document.getElementById('addModal').style.display = 'block';
+        });
 
-            // Fecha o modal de adicionar produto
-            document.getElementById('addModalClose').addEventListener('click', function() {
-                document.getElementById('addModal').style.display = 'none';
-            });
+        // Abrir modal de Pesquisa
+        document.getElementById('openSearchModal').addEventListener('click', function() {
+            document.getElementById('searchModal').style.display = 'block';
+        });
 
-            // Abre o modal de editar produto
-            document.querySelectorAll('.editButton').forEach(button => {
-    button.addEventListener('click', function() {
-        const id = this.getAttribute('data-id');
-        
-        // Carregar dados do produto via AJAX e preencher o formulário
-        fetch('product_register.php?id=' + id)
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('editId').value = data.id;
-                document.getElementById('editName').value = data.name;
-                document.getElementById('editDescription').value = data.description;
-                document.getElementById('editQuantity').value = data.quantity;
-                document.getElementById('editSupplier').value = data.supplier;
-                document.getElementById('editModal').style.display = 'block';
-            })
-            .catch(error => console.error('Erro ao carregar dados do produto:', error));
-    });
-});
-
-            // Fecha o modal de editar produto
-            document.getElementById('editModalClose').addEventListener('click', function() {
-                document.getElementById('editModal').style.display = 'none';
-            });
-
-            // Abre o modal de pesquisa
-            document.getElementById('openSearchModal').addEventListener('click', function() {
-                document.getElementById('searchModal').style.display = 'block';
-            });
-
-            // Fecha o modal de pesquisa
-            document.getElementById('searchModalClose').addEventListener('click', function() {
-                document.getElementById('searchModal').style.display = 'none';
-            });
-
-            // Pesquisa produtos e exibe os resultados
-            document.getElementById('searchForm').addEventListener('submit', function(event) {
-                event.preventDefault();
-                const searchQuery = document.getElementById('search').value;
-
-                fetch('product_register.php?ajax=true&search=' + encodeURIComponent(searchQuery))
-                    .then(response => response.text())
-                    .then(data => {
-                        const searchResults = document.getElementById('searchResults');
-                        const noResults = document.getElementById('noResults');
-
-                        if (data.trim() === '') {
-                            noResults.style.display = 'block';
-                            searchResults.innerHTML = '';
-                        } else {
-                            noResults.style.display = 'none';
-                            searchResults.innerHTML = `
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th></th>
-                                            <th>ID</th>
-                                            <th>Nome</th>
-                                            <th>Descrição</th>
-                                            <th>Quantidade</th>
-                                            <th>Fornecedor</th>
-                                            <th>Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>${data}</tbody>
-                                </table>
-                            `;
-                        }
-                    })
-                    .catch(error => console.error('Erro ao buscar produtos:', error));
-            });
-
-            // Exclui produtos selecionados
-            document.getElementById('deleteSelected').addEventListener('click', function() {
-                const selectedIds = Array.from(document.querySelectorAll('input[name="select[]"]:checked')).map(checkbox => checkbox.value);
-                if (selectedIds.length > 0) {
-                    if (confirm('Tem certeza de que deseja excluir os produtos selecionados?')) {
-                        const formData = new FormData();
-                        formData.append('action', 'delete_selected');
-                        formData.append('ids', selectedIds.join(','));
-
-                        fetch('product_register.php', {
-                            method: 'POST',
-                            body: formData
-                        })
-                        .then(response => response.text())
-                        .then(() => location.reload())
-                        .catch(error => console.error('Erro ao excluir produtos:', error));
-                    }
-                } else {
-                    alert('Selecione ao menos um produto para excluir.');
+        // Função para fechar os modais ao clicar fora do conteúdo
+        window.onclick = function(event) {
+            const modals = ['addModal', 'editModal', 'searchModal'];
+            modals.forEach(function(modalId) {
+                const modal = document.getElementById(modalId);
+                if (event.target == modal) {
+                    modal.style.display = 'none';
                 }
             });
+        };
 
-            // Salvar novo produto
-            document.getElementById('addForm').addEventListener('submit', function(event) {
-                event.preventDefault();
-                const formData = new FormData(this);
-                formData.append('action', 'add');
+        // Função de Excluir Produtos
+        document.getElementById('productTable').addEventListener('click', function(event) {
+            if (event.target.classList.contains('deleteButton')) {
+                const id = event.target.getAttribute('data-id');
+                if (confirm('Tem certeza que deseja excluir este produto?')) {
+                    const formData = new FormData();
+                    formData.append('action', 'delete');
+                    formData.append('id', id);
 
-                fetch('product_register.php', {
-                    method: 'POST',
-                    body: formData
+                    fetch('product_register.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.text())
+                    .then(() => location.reload())
+                    .catch(error => console.error('Erro ao excluir produto:', error));
+                }
+            }
+        });
+
+        // Função de Editar Produtos
+        document.getElementById('productTable').addEventListener('click', function(event) {
+            if (event.target.classList.contains('editButton')) {
+                const id = event.target.getAttribute('data-id');
+
+                fetch('product_register.php?id=' + id)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('editId').value = data.id;
+                    document.getElementById('editName').value = data.name;
+                    document.getElementById('editDescription').value = data.description;
+                    document.getElementById('editQuantity').value = data.quantity;
+                    document.getElementById('editSupplier').value = data.supplier;
+                    document.getElementById('editModal').style.display = 'block';
                 })
-                .then(response => response.text())
-                .then(() => {
-                    document.getElementById('addModal').style.display = 'none';
-                    location.reload();
-                })
-                .catch(error => console.error('Erro ao adicionar produto:', error));
-            });
+                .catch(error => console.error('Erro ao carregar dados do produto:', error));
+            }
+        });
 
-            // Salvar alterações no produto
-            document.getElementById('editForm').addEventListener('submit', function(event) {
-                event.preventDefault();
-                const formData = new FormData(this);
-                formData.append('action', 'update');
+        // Função de Pesquisa com Excluir/Editar no Modal
+        document.getElementById('searchForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const query = document.getElementById('searchQuery').value;
 
-                fetch('product_register.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.text())
-                .then(() => {
-                    document.getElementById('editModal').style.display = 'none';
-                    location.reload();
-                })
-                .catch(error => console.error('Erro ao atualizar produto:', error));
-            });
-
-            // Excluir produto individualmente
-            document.querySelectorAll('.deleteButton').forEach(button => {
-    button.addEventListener('click', function() {
-        const id = this.getAttribute('data-id');
-        if (confirm('Tem certeza de que deseja excluir este produto?')) {
-            const formData = new FormData();
-            formData.append('action', 'delete');
-            formData.append('id', id);
-
-            fetch('product_register.php', {
-                method: 'POST',
-                body: formData
-            })
+            fetch('product_register.php?search=' + encodeURIComponent(query) + '&ajax=true')
             .then(response => response.text())
-            .then(() => location.reload())
-            .catch(error => console.error('Erro ao excluir produto:', error));
-        }
-    });
-});
+            .then(html => {
+                const searchResults = document.getElementById('searchResults');
+                searchResults.innerHTML = html;
+
+                if (html.trim() === '') {
+                    document.getElementById('noResults').style.display = 'block';
+                } else {
+                    document.getElementById('noResults').style.display = 'none';
+                }
+            })
+            .catch(error => console.error('Erro ao buscar produtos:', error));
+        });
+
+        // Função de Excluir no Modal de Pesquisa
+        document.getElementById('searchResults').addEventListener('click', function(event) {
+            if (event.target.classList.contains('deleteButton')) {
+                const id = event.target.getAttribute('data-id');
+                if (confirm('Tem certeza que deseja excluir este produto?')) {
+                    const formData = new FormData();
+                    formData.append('action', 'delete');
+                    formData.append('id', id);
+
+                    fetch('product_register.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.text())
+                    .then(() => document.getElementById('searchForm').submit())
+                    .catch(error => console.error('Erro ao excluir produto:', error));
+                }
+            }
+        });
+
+        // Função de Editar no Modal de Pesquisa
+        document.getElementById('searchResults').addEventListener('click', function(event) {
+            if (event.target.classList.contains('editButton')) {
+                const id = event.target.getAttribute('data-id');
+
+                fetch('product_register.php?id=' + id)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('editId').value = data.id;
+                    document.getElementById('editName').value = data.name;
+                    document.getElementById('editDescription').value = data.description;
+                    document.getElementById('editQuantity').value = data.quantity;
+                    document.getElementById('editSupplier').value = data.supplier;
+                    document.getElementById('editModal').style.display = 'block';
+                })
+                .catch(error => console.error('Erro ao carregar dados do produto:', error));
+            }
         });
     </script>
 </body>
+
 </html>
