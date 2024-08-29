@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 29/08/2024 às 15:25
+-- Tempo de geração: 29/08/2024 às 16:24
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -24,6 +24,25 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
+-- Estrutura para tabela `categories`
+--
+
+CREATE TABLE `categories` (
+  `id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Despejando dados para a tabela `categories`
+--
+
+INSERT INTO `categories` (`id`, `name`) VALUES
+(1, 'comida'),
+(2, 'limpeza');
+
+-- --------------------------------------------------------
+
+--
 -- Estrutura para tabela `products`
 --
 
@@ -33,16 +52,17 @@ CREATE TABLE `products` (
   `description` text DEFAULT NULL,
   `quantity` int(11) NOT NULL,
   `supplier` varchar(255) DEFAULT NULL,
-  `user_id` int(11) NOT NULL
+  `user_id` int(11) NOT NULL,
+  `category_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Despejando dados para a tabela `products`
 --
 
-INSERT INTO `products` (`id`, `name`, `description`, `quantity`, `supplier`, `user_id`) VALUES
-(90281942, 'Feijão', 'Aurora', 1, '1', 7),
-(90281943, 'Feijão', '1', 2, '2', 7);
+INSERT INTO `products` (`id`, `name`, `description`, `quantity`, `supplier`, `user_id`, `category_id`) VALUES
+(90281944, 'teste', 'Aurora', 1321, 'vinicius', 7, 1),
+(90281945, 'Feijão', 'Aurora', 213, 'tigrinho', 7, 2);
 
 -- --------------------------------------------------------
 
@@ -74,11 +94,18 @@ INSERT INTO `users` (`id`, `username`, `password`, `email`) VALUES
 --
 
 --
+-- Índices de tabela `categories`
+--
+ALTER TABLE `categories`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Índices de tabela `products`
 --
 ALTER TABLE `products`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `user_id` (`user_id`);
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `products_ibfk_2` (`category_id`);
 
 --
 -- Índices de tabela `users`
@@ -92,10 +119,16 @@ ALTER TABLE `users`
 --
 
 --
+-- AUTO_INCREMENT de tabela `categories`
+--
+ALTER TABLE `categories`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
 -- AUTO_INCREMENT de tabela `products`
 --
 ALTER TABLE `products`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=90281944;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=90281946;
 
 --
 -- AUTO_INCREMENT de tabela `users`
@@ -111,7 +144,8 @@ ALTER TABLE `users`
 -- Restrições para tabelas `products`
 --
 ALTER TABLE `products`
-  ADD CONSTRAINT `products_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+  ADD CONSTRAINT `products_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `products_ibfk_2` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
