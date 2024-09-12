@@ -2,7 +2,20 @@
 require_once '../includes/auth_check.php';
 require_once '../db/config.php';
 
-// Função para buscar produtos
+// Funções auxiliares
+function getCategories($pdo)
+{
+    $stmt = $pdo->query("SELECT * FROM categories");
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function getUser($pdo, $userId)
+{
+    $stmt = $pdo->prepare("SELECT username FROM users WHERE id = ?");
+    $stmt->execute([$userId]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
 function getProducts($pdo, $userId, $searchQuery = '')
 {
     $sql = "SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id WHERE p.user_id = ?";
@@ -20,7 +33,6 @@ function getProducts($pdo, $userId, $searchQuery = '')
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-// Função para adicionar um produto com validação e tratamento de exceções
 function addProduct($pdo, $name, $description, $quantity, $supplier, $categoryId, $userId)
 {
     try {
@@ -29,6 +41,31 @@ function addProduct($pdo, $name, $description, $quantity, $supplier, $categoryId
         return ['success' => true, 'message' => 'Produto adicionado com sucesso.'];
     } catch (PDOException $e) {
         return ['success' => false, 'message' => 'Erro ao adicionar produto: ' . $e->getMessage()];
+    }
+}
+
+// Função para excluir um produto
+function deleteProduct($pdo, $id, $userId)
+{
+    try {
+        $stmt = $pdo->prepare("DELETE FROM products WHERE id = ? AND user_id = ?");
+        $stmt->execute([$id, $userId]);
+        return ['success' => true, 'message' => 'Produto excluído com sucesso.'];
+    } catch (PDOException $e) {
+        return ['success' => false, 'message' => 'Erro ao excluir produto: ' . $e->getMessage()];
+    }
+}
+
+// Função para excluir produtos selecionados
+function deleteSelectedProducts($pdo, $ids, $userId)
+{
+    try {
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $stmt = $pdo->prepare("DELETE FROM products WHERE id IN ($placeholders) AND user_id = ?");
+        $stmt->execute(array_merge($ids, [$userId]));
+        return ['success' => true, 'message' => 'Produtos selecionados excluídos com sucesso.'];
+    } catch (PDOException $e) {
+        return ['success' => false, 'message' => 'Erro ao excluir produtos selecionados: ' . $e->getMessage()];
     }
 }
 
@@ -57,30 +94,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         case 'delete':
             // Excluir produto
             if ($id) {
-                $stmt = $pdo->prepare("DELETE FROM products WHERE id = ? AND user_id = ?");
-                $stmt->execute([$id, $userId]);
+                $result = deleteProduct($pdo, $id, $userId);
             }
             break;
         case 'delete_selected':
             // Excluir produtos selecionados
             $ids = explode(',', $_POST['ids']);
             if (is_array($ids) && count($ids) > 0) {
-                $placeholders = implode(',', array_fill(0, count($ids), '?'));
-                $stmt = $pdo->prepare("DELETE FROM products WHERE id IN ($placeholders) AND user_id = ?");
-                $stmt->execute(array_merge($ids, [$userId]));
+                $result = deleteSelectedProducts($pdo, $ids, $userId);
             }
             break;
-
         case 'add_category':
             // Adicionar categoria
             $stmt = $pdo->prepare("INSERT INTO categories (name) VALUES (?)");
             $stmt->execute([$name]);
+            $result = ['success' => true, 'message' => 'Categoria adicionada com sucesso.'];
             break;
         case 'update_category':
             // Atualizar categoria
             if ($id) {
                 $stmt = $pdo->prepare("UPDATE categories SET name = ? WHERE id = ?");
                 $stmt->execute([$name, $id]);
+                $result = ['success' => true, 'message' => 'Categoria atualizada com sucesso.'];
             }
             break;
         case 'delete_category':
@@ -88,6 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             if ($id) {
                 $stmt = $pdo->prepare("DELETE FROM categories WHERE id = ?");
                 $stmt->execute([$id]);
+                $result = ['success' => true, 'message' => 'Categoria excluída com sucesso.'];
             }
             break;
     }
@@ -98,21 +134,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     header('Location: product_register.php');
     exit();
 }
-
-// Funções auxiliares
-function getCategories($pdo)
-{
-    $stmt = $pdo->query("SELECT * FROM categories");
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-function getUser($pdo, $userId)
-{
-    $stmt = $pdo->prepare("SELECT username FROM users WHERE id = ?");
-    $stmt->execute([$userId]);
-    return $stmt->fetch(PDO::FETCH_ASSOC);
-}
-
 
 // Carregar produtos e categorias
 $searchQuery = $_GET['search'] ?? '';
@@ -148,6 +169,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
     exit();
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="pt-br">
