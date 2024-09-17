@@ -44,7 +44,6 @@ function addProduct($pdo, $name, $description, $quantity, $supplier, $categoryId
     }
 }
 
-// Função para excluir um produto
 function deleteProduct($pdo, $id, $userId)
 {
     try {
@@ -56,7 +55,6 @@ function deleteProduct($pdo, $id, $userId)
     }
 }
 
-// Função para excluir produtos selecionados
 function deleteSelectedProducts($pdo, $ids, $userId)
 {
     try {
@@ -69,6 +67,37 @@ function deleteSelectedProducts($pdo, $ids, $userId)
     }
 }
 
+// Função para excluir uma categoria
+function deleteCategory($pdo, $id)
+{
+    try {
+        // Verifica se a categoria está associada a produtos
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM products WHERE category_id = ?");
+        $stmt->execute([$id]);
+        $count = $stmt->fetchColumn();
+
+        if ($count > 0) {
+            return ['success' => false, 'message' => 'Não é possível excluir a categoria, pois ela está associada a produtos.'];
+        }
+
+        // Exclui a categoria
+        $stmt = $pdo->prepare("DELETE FROM categories WHERE id = ?");
+        $stmt->execute([$id]);
+        return ['success' => true, 'message' => 'Categoria excluída com sucesso.'];
+    } catch (PDOException $e) {
+        return ['success' => false, 'message' => 'Erro ao excluir categoria: ' . $e->getMessage()];
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'delete_category') {
+    $id = $_GET['id'] ?? null;
+    if ($id) {
+        $result = deleteCategory($pdo, $id);
+        header('Content-Type: application/json');
+        echo json_encode($result);
+        exit();
+    }
+}
 // Processar requisições POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
@@ -77,41 +106,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $description = $_POST['description'] ?? '';
     $quantity = $_POST['quantity'] ?? 0;
     $supplier = $_POST['supplier'] ?? '';
-    $categoryId = $_POST['category_id'] ?? null; // Adicionado para produtos
+    $categoryId = $_POST['category_id'] ?? null;
     $userId = $_SESSION['user_id'];
+
+    $result = ['success' => false, 'message' => 'Ação não reconhecida.'];
 
     switch ($action) {
         case 'add':
             $result = addProduct($pdo, $name, $description, $quantity, $supplier, $categoryId, $userId);
             break;
         case 'update':
-            // Atualizar produto
             if ($id) {
                 $stmt = $pdo->prepare("UPDATE products SET name = ?, description = ?, quantity = ?, supplier = ?, category_id = ? WHERE id = ? AND user_id = ?");
                 $stmt->execute([$name, $description, $quantity, $supplier, $categoryId, $id, $userId]);
+                $result = ['success' => true, 'message' => 'Produto atualizado com sucesso.'];
             }
             break;
         case 'delete':
-            // Excluir produto
             if ($id) {
                 $result = deleteProduct($pdo, $id, $userId);
             }
             break;
         case 'delete_selected':
-            // Excluir produtos selecionados
             $ids = explode(',', $_POST['ids']);
             if (is_array($ids) && count($ids) > 0) {
                 $result = deleteSelectedProducts($pdo, $ids, $userId);
             }
             break;
         case 'add_category':
-            // Adicionar categoria
             $stmt = $pdo->prepare("INSERT INTO categories (name) VALUES (?)");
             $stmt->execute([$name]);
             $result = ['success' => true, 'message' => 'Categoria adicionada com sucesso.'];
             break;
         case 'update_category':
-            // Atualizar categoria
             if ($id) {
                 $stmt = $pdo->prepare("UPDATE categories SET name = ? WHERE id = ?");
                 $stmt->execute([$name, $id]);
@@ -119,22 +146,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
             break;
         case 'delete_category':
-            // Excluir categoria
             if ($id) {
-                $stmt = $pdo->prepare("DELETE FROM categories WHERE id = ?");
-                $stmt->execute([$id]);
-                $result = ['success' => true, 'message' => 'Categoria excluída com sucesso.'];
+                $result = deleteCategory($pdo, $id);
             }
             break;
     }
 
-    if (isset($result)) {
-        $_SESSION['flash_message'] = $result['message'];
-    }
-    header('Location: product_register.php');
+    // Enviar resposta JSON
+    header('Content-Type: application/json');
+    echo json_encode($result);
     exit();
 }
-
 // Carregar produtos e categorias
 $searchQuery = $_GET['search'] ?? '';
 $userId = $_SESSION['user_id'];
@@ -582,6 +604,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
                                 <button class="editCategoryButton" data-id="<?php echo htmlspecialchars($category['id']); ?>">Editar</button>
                                 <button class="deleteCategoryButton" data-id="<?php echo htmlspecialchars($category['id']); ?>">Excluir</button>
                             </td>
+
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -671,41 +694,67 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
             });
         });
 
-        // Lógica de exclusão de produtos via AJAX
-        function deleteProduct(productId) {
-            if (confirm("Tem certeza que deseja excluir este produto?")) {
-                const formData = new FormData();
-                formData.append('action', 'delete');
-                formData.append('id', productId);
-
-                fetch('product_register.php', {
-                        method: 'POST',
-                        body: formData,
-                    })
-                    .then(response => response.text())
-                    .then(data => {
-                        if (data === 'success') {
-                            alert('Produto excluído com sucesso.');
-                            location.reload(); // Atualiza a página para refletir as mudanças
-                        } else {
-                            alert('Erro ao excluir o produto.');
-                            console.error('Erro:', data);
-                        }
-                    })
-                    .catch(error => {
-                        alert('Erro ao excluir o produto.');
-                        console.error('Erro:', error);
-                    });
+// Lógica de exclusão de produtos via AJAX
+function handleAction(action, data) {
+    fetch('product_register.php', {
+            method: 'POST',
+            body: data,
+        })
+        .then(response => response.json()) // Espera resposta JSON
+        .then(data => {
+            if (data.success) {
+                alert(data.message); // Mensagem de sucesso
+            } else {
+                alert(data.message); // Mensagem de erro
             }
-        }
-
-        // Vincular evento de clique para os botões de exclusão
-        document.querySelectorAll('.deleteButton').forEach(button => {
-            button.addEventListener('click', function() {
-                const productId = this.getAttribute('data-id');
-                deleteProduct(productId);
-            });
+        })
+        .catch(error => {
+            alert('Erro ao processar a ação.');
+            console.error('Erro:', error);
         });
+}
+
+// Função para excluir produto
+function deleteProduct(productId) {
+    if (confirm("Tem certeza que deseja excluir este produto?")) {
+        const formData = new FormData();
+        formData.append('action', 'delete');
+        formData.append('id', productId);
+        handleAction('delete', formData);
+    }
+}
+
+// Função para adicionar produto
+function addProduct(name, description, quantity, supplier, categoryId) {
+    const formData = new FormData();
+    formData.append('action', 'add');
+    formData.append('name', name);
+    formData.append('description', description);
+    formData.append('quantity', quantity);
+    formData.append('supplier', supplier);
+    formData.append('category_id', categoryId);
+    handleAction('add', formData);
+}
+
+// Vincular eventos de clique para os botões de exclusão e adição
+document.querySelectorAll('.deleteButton').forEach(button => {
+    button.addEventListener('click', function() {
+        const productId = this.getAttribute('data-id');
+        deleteProduct(productId);
+    });
+});
+
+// Exemplo de uso para adicionar produto (você deve adaptar para seu caso)
+document.querySelector('#addProductButton').addEventListener('click', function() {
+    const name = document.querySelector('#productName').value;
+    const description = document.querySelector('#productDescription').value;
+    const quantity = document.querySelector('#productQuantity').value;
+    const supplier = document.querySelector('#productSupplier').value;
+    const categoryId = document.querySelector('#productCategory').value;
+    addProduct(name, description, quantity, supplier, categoryId);
+});
+
+
 
         // Lógica de edição de categorias
         document.querySelectorAll('.editCategoryButton').forEach(function(button) {
@@ -721,7 +770,18 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
             button.addEventListener('click', function() {
                 var categoryId = this.getAttribute('data-id');
                 if (confirm('Tem certeza que deseja excluir esta categoria?')) {
-                    window.location.href = 'product_register.php?action=delete_category&id=' + categoryId;
+                    fetch('product_register.php?action=delete_category&id=' + categoryId)
+                        .then(response => response.json())
+                        .then(data => {
+                            alert(data.message); // Exibe a mensagem recebida
+                            if (data.success) {
+                                location.reload(); // Atualiza a página se a exclusão for bem-sucedida
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Erro:', error);
+                            alert('Erro ao excluir a categoria.');
+                        });
                 }
             });
         });
