@@ -3,9 +3,10 @@ require_once '../includes/auth_check.php';
 require_once '../db/config.php';
 
 // Funções auxiliares
-function getCategories($pdo)
+function getCategories($pdo, $userId)
 {
-    $stmt = $pdo->query("SELECT * FROM categories");
+    $stmt = $pdo->prepare("SELECT * FROM categories WHERE user_id = ?");
+    $stmt->execute([$userId]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
@@ -44,60 +45,31 @@ function addProduct($pdo, $name, $description, $quantity, $supplier, $categoryId
     }
 }
 
+// Função para excluir um produto
 function deleteProduct($pdo, $id, $userId)
 {
     try {
         $stmt = $pdo->prepare("DELETE FROM products WHERE id = ? AND user_id = ?");
         $stmt->execute([$id, $userId]);
-        return ['success' => true, 'message' => 'Produto excluído com sucesso.'];
+        return ['success' => true]; // Retorna apenas o status de sucesso
     } catch (PDOException $e) {
-        return ['success' => false, 'message' => 'Erro ao excluir produto: ' . $e->getMessage()];
+        return ['success' => false]; // Em caso de erro, retorne apenas o status de erro
     }
 }
 
+// Função para excluir produtos selecionados
 function deleteSelectedProducts($pdo, $ids, $userId)
 {
     try {
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
         $stmt = $pdo->prepare("DELETE FROM products WHERE id IN ($placeholders) AND user_id = ?");
         $stmt->execute(array_merge($ids, [$userId]));
-        return ['success' => true, 'message' => 'Produtos selecionados excluídos com sucesso.'];
+        return ['success' => true]; // Mensagem de sucesso
     } catch (PDOException $e) {
-        return ['success' => false, 'message' => 'Erro ao excluir produtos selecionados: ' . $e->getMessage()];
+        return ['success' => false]; // Mensagem de erro
     }
 }
 
-// Função para excluir uma categoria
-function deleteCategory($pdo, $id)
-{
-    try {
-        // Verifica se a categoria está associada a produtos
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM products WHERE category_id = ?");
-        $stmt->execute([$id]);
-        $count = $stmt->fetchColumn();
-
-        if ($count > 0) {
-            return ['success' => false, 'message' => 'Não é possível excluir a categoria, pois ela está associada a produtos.'];
-        }
-
-        // Exclui a categoria
-        $stmt = $pdo->prepare("DELETE FROM categories WHERE id = ?");
-        $stmt->execute([$id]);
-        return ['success' => true, 'message' => 'Categoria excluída com sucesso.'];
-    } catch (PDOException $e) {
-        return ['success' => false, 'message' => 'Erro ao excluir categoria: ' . $e->getMessage()];
-    }
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'delete_category') {
-    $id = $_GET['id'] ?? null;
-    if ($id) {
-        $result = deleteCategory($pdo, $id);
-        header('Content-Type: application/json');
-        echo json_encode($result);
-        exit();
-    }
-}
 // Processar requisições POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
@@ -106,63 +78,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $description = $_POST['description'] ?? '';
     $quantity = $_POST['quantity'] ?? 0;
     $supplier = $_POST['supplier'] ?? '';
-    $categoryId = $_POST['category_id'] ?? null;
+    $categoryId = $_POST['category_id'] ?? null; // Adicionado para produtos
     $userId = $_SESSION['user_id'];
-
-    $result = ['success' => false, 'message' => 'Ação não reconhecida.'];
 
     switch ($action) {
         case 'add':
             $result = addProduct($pdo, $name, $description, $quantity, $supplier, $categoryId, $userId);
             break;
-        case 'update':
-            if ($id) {
-                $stmt = $pdo->prepare("UPDATE products SET name = ?, description = ?, quantity = ?, supplier = ?, category_id = ? WHERE id = ? AND user_id = ?");
-                $stmt->execute([$name, $description, $quantity, $supplier, $categoryId, $id, $userId]);
-                $result = ['success' => true, 'message' => 'Produto atualizado com sucesso.'];
-            }
-            break;
         case 'delete':
+            // Excluir produto
             if ($id) {
                 $result = deleteProduct($pdo, $id, $userId);
+                if ($result['success']) {
+                    echo 'success'; // Retorna 'success' para o frontend
+                } else {
+                    echo 'error'; // Retorna 'error' em caso de falha
+                }
+                exit(); // Adicione um exit para não continuar o processamento
             }
             break;
         case 'delete_selected':
+            // Excluir produtos selecionados
             $ids = explode(',', $_POST['ids']);
             if (is_array($ids) && count($ids) > 0) {
                 $result = deleteSelectedProducts($pdo, $ids, $userId);
-            }
-            break;
-        case 'add_category':
-            $stmt = $pdo->prepare("INSERT INTO categories (name) VALUES (?)");
-            $stmt->execute([$name]);
-            $result = ['success' => true, 'message' => 'Categoria adicionada com sucesso.'];
-            break;
-        case 'update_category':
-            if ($id) {
-                $stmt = $pdo->prepare("UPDATE categories SET name = ? WHERE id = ?");
-                $stmt->execute([$name, $id]);
-                $result = ['success' => true, 'message' => 'Categoria atualizada com sucesso.'];
+                if ($result['success']) {
+                    echo 'success'; // Retorna 'success' para o frontend
+                } else {
+                    echo 'error'; // Retorna 'error' em caso de falha
+                }
+                exit(); // Adicione um exit para não continuar o processamento
             }
             break;
         case 'delete_category':
             if ($id) {
-                $result = deleteCategory($pdo, $id);
+                try {
+                    // Excluir categoria apenas se o usuário for o criador
+                    $stmt = $pdo->prepare("DELETE FROM categories WHERE id = ? AND user_id = ?");
+                    $stmt->execute([$id, $userId]);
+
+                    if ($stmt->rowCount() > 0) {
+                        echo 'success'; // Retorna 'success' para o frontend
+                    } else {
+                        echo 'error'; // Retorna 'error' se não foi possível excluir
+                    }
+                } catch (PDOException $e) {
+                    echo 'error'; // Em caso de erro, retorne 'error'
+                }
+            } else {
+                echo 'error'; // Caso o ID seja inválido
             }
-            break;
+            exit();
     }
 
-    // Enviar resposta JSON
-    header('Content-Type: application/json');
-    echo json_encode($result);
+    header('Location: product_register.php');
     exit();
 }
+
 // Carregar produtos e categorias
 $searchQuery = $_GET['search'] ?? '';
 $userId = $_SESSION['user_id'];
 $products = getProducts($pdo, $userId, $searchQuery);
 $user = getUser($pdo, $userId);
-$categories = getCategories($pdo);
+$categories = getCategories($pdo, $userId);
 
 // Retornar produtos para pesquisa via AJAX
 if (isset($_GET['action']) && $_GET['action'] === 'search') {
@@ -466,7 +444,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
         <table id="productTable">
             <thead>
                 <tr>
-                    <th></th>
+                    <th><input type="checkbox" id="selectAll"></th>
                     <th>ID</th>
                     <th>Nome</th>
                     <th>Descrição</th>
@@ -572,6 +550,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
                         <th>Descrição</th>
                         <th>Quantidade</th>
                         <th>Fornecedor</th>
+                        <th>Categoria</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
@@ -604,7 +583,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
                                 <button class="editCategoryButton" data-id="<?php echo htmlspecialchars($category['id']); ?>">Editar</button>
                                 <button class="deleteCategoryButton" data-id="<?php echo htmlspecialchars($category['id']); ?>">Excluir</button>
                             </td>
-
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -642,21 +620,28 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
     </div>
 
     <script>
+        // Funções de controle de modais
         function openModal(id) {
-            document.getElementById(id).style.display = 'block';
+            const modal = document.getElementById(id);
+            if (modal) {
+                modal.style.display = 'block';
+            }
         }
 
         function closeModal(modal) {
-            modal.style.display = 'none';
+            if (modal) {
+                modal.style.display = 'none';
+            }
         }
 
         function setupModalEvents() {
-            var modals = document.querySelectorAll('.modal');
-            var closes = document.querySelectorAll('.modal .close');
+            const modals = document.querySelectorAll('.modal');
+            const closes = document.querySelectorAll('.modal .close');
 
             closes.forEach(function(close) {
                 close.addEventListener('click', function() {
-                    closeModal(this.closest('.modal'));
+                    const modal = this.closest('.modal');
+                    closeModal(modal);
                 });
             });
 
@@ -667,180 +652,175 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
             });
         }
 
-        document.getElementById('openAddModal').addEventListener('click', function() {
+        // Função genérica para requisições de exclusão de produtos/categorias
+        function deleteItem(type, id) {
+            let confirmMessage = type === 'product' ?
+                "Tem certeza que deseja excluir este produto?" :
+                "Tem certeza que deseja excluir esta categoria?";
+
+            if (confirm(confirmMessage)) {
+                const formData = new FormData();
+                formData.append('action', type === 'product' ? 'delete' : 'delete_category');
+                formData.append('id', id);
+
+                fetch('product_register.php', {
+                        method: 'POST',
+                        body: formData,
+                    })
+                    .then(response => response.text())
+                    .then(data => {
+                        if (data === 'success') {
+                            alert(type === 'product' ? 'Produto excluído com sucesso.' : 'Categoria excluída com sucesso.');
+                            location.reload(); // Atualiza a página
+                        } else {
+                            alert(type === 'product' ? 'Erro ao excluir o produto.' : 'Erro ao excluir a categoria.');
+                            console.error('Erro:', data);
+                        }
+                    })
+                    .catch(error => {
+                        alert(type === 'product' ? 'Erro ao excluir o produto.' : 'Erro ao excluir a categoria.');
+                        console.error('Erro:', error);
+                    });
+            }
+        }
+
+        // Função para ações de produtos
+        function setupProductActions() {
+            const editButtons = document.querySelectorAll('.editButton');
+            const deleteButtons = document.querySelectorAll('.deleteButton');
+            const deleteSelectedButton = document.getElementById('deleteSelected');
+
+            editButtons.forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const productId = this.getAttribute('data-id');
+                    document.getElementById('editId').value = productId;
+                    openModal('editModal');
+                });
+            });
+
+            deleteButtons.forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const productId = this.getAttribute('data-id');
+                    deleteItem('product', productId);
+                });
+            });
+
+            // Exclusão em massa de produtos
+            if (deleteSelectedButton) {
+                deleteSelectedButton.addEventListener('click', function() {
+                    const selectedCheckboxes = document.querySelectorAll('input[name="select[]"]:checked');
+                    const selectedIds = Array.from(selectedCheckboxes).map(checkbox => checkbox.value);
+
+                    if (selectedIds.length > 0 && confirm('Tem certeza que deseja excluir os produtos selecionados?')) {
+                        const formData = new FormData();
+                        formData.append('action', 'delete_selected');
+                        formData.append('ids', selectedIds.join(',')); // IDs separados por vírgula
+
+                        fetch('product_register.php', {
+                                method: 'POST',
+                                body: formData
+                            })
+                            .then(response => response.text())
+                            .then(data => {
+                                if (data === 'success') {
+                                    alert('Produtos selecionados excluídos com sucesso.');
+                                    location.reload();
+                                } else {
+                                    alert('Erro ao excluir os produtos selecionados.');
+                                    console.error('Erro:', data);
+                                }
+                            })
+                            .catch(error => {
+                                alert('Erro ao excluir os produtos selecionados.');
+                                console.error('Erro:', error);
+                            });
+                    } else {
+                        alert('Nenhum produto selecionado.');
+                    }
+                });
+            }
+        }
+
+        // Função para ações de categorias
+        function setupCategoryActions() {
+            const editCategoryButtons = document.querySelectorAll('.editCategoryButton');
+            const deleteCategoryButtons = document.querySelectorAll('.deleteCategoryButton');
+
+            editCategoryButtons.forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const categoryId = this.getAttribute('data-id');
+                    document.getElementById('editCategoryId').value = categoryId;
+                    openModal('editCategoryModal');
+                });
+            });
+
+            deleteCategoryButtons.forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const categoryId = this.getAttribute('data-id');
+                    deleteItem('category', categoryId);
+                });
+            });
+        }
+
+        // Função para pesquisa de produtos
+        const searchForm = document.getElementById('searchForm');
+        if (searchForm) {
+            searchForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const searchQuery = document.getElementById('searchQuery').value;
+                const resultsTable = document.getElementById('searchResults').querySelector('tbody');
+                const noResultsDiv = document.getElementById('noResults');
+                const tableHead = document.getElementById('searchResults').querySelector('thead');
+
+                // Limpar os resultados anteriores
+                resultsTable.innerHTML = '';
+
+                // Fazer requisição AJAX
+                fetch('product_register.php?action=search&search=' + encodeURIComponent(searchQuery))
+                    .then(response => response.text())
+                    .then(data => {
+                        if (data === 'no-results') {
+                            noResultsDiv.style.display = 'block';
+                            tableHead.style.display = 'none';
+                        } else {
+                            noResultsDiv.style.display = 'none';
+                            tableHead.style.display = 'table-header-group';
+                            resultsTable.innerHTML = data;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro na pesquisa:', error);
+                    });
+            });
+        }
+        // Selecionar ou desmarcar todos os checkboxes
+        document.getElementById('selectAll').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('input[name="select[]"]');
+            checkboxes.forEach(function(checkbox) {
+                checkbox.checked = this.checked; // Define o estado dos checkboxes baseado no estado do checkbox "Selecionar Todos"
+            }, this);
+        });
+
+        // Inicialização de modais e ações
+        setupModalEvents();
+        setupProductActions();
+        setupCategoryActions();
+
+        // Eventos de abertura de modais
+        document.getElementById('openAddModal')?.addEventListener('click', function() {
             openModal('addModal');
         });
 
-        document.getElementById('openSearchModal').addEventListener('click', function() {
+        document.getElementById('openSearchModal')?.addEventListener('click', function() {
             openModal('searchModal');
         });
 
-        document.getElementById('openCategoryModal').addEventListener('click', function() {
+        document.getElementById('openCategoryModal')?.addEventListener('click', function() {
             openModal('categoryModal');
         });
 
-        document.getElementById('openAddCategoryModal').addEventListener('click', function() {
+        document.getElementById('openAddCategoryModal')?.addEventListener('click', function() {
             openModal('addCategoryModal');
-        });
-
-        setupModalEvents();
-
-        // Lógica de edição de produtos
-        document.querySelectorAll('.editButton').forEach(function(button) {
-            button.addEventListener('click', function() {
-                var productId = this.getAttribute('data-id');
-                document.getElementById('editId').value = productId;
-                openModal('editModal');
-            });
-        });
-
-// Lógica de exclusão de produtos via AJAX
-function handleAction(action, data) {
-    fetch('product_register.php', {
-            method: 'POST',
-            body: data,
-        })
-        .then(response => response.json()) // Espera resposta JSON
-        .then(data => {
-            if (data.success) {
-                alert(data.message); // Mensagem de sucesso
-            } else {
-                alert(data.message); // Mensagem de erro
-            }
-        })
-        .catch(error => {
-            alert('Erro ao processar a ação.');
-            console.error('Erro:', error);
-        });
-}
-
-// Função para excluir produto
-function deleteProduct(productId) {
-    if (confirm("Tem certeza que deseja excluir este produto?")) {
-        const formData = new FormData();
-        formData.append('action', 'delete');
-        formData.append('id', productId);
-        handleAction('delete', formData);
-    }
-}
-
-// Função para adicionar produto
-function addProduct(name, description, quantity, supplier, categoryId) {
-    const formData = new FormData();
-    formData.append('action', 'add');
-    formData.append('name', name);
-    formData.append('description', description);
-    formData.append('quantity', quantity);
-    formData.append('supplier', supplier);
-    formData.append('category_id', categoryId);
-    handleAction('add', formData);
-}
-
-// Vincular eventos de clique para os botões de exclusão e adição
-document.querySelectorAll('.deleteButton').forEach(button => {
-    button.addEventListener('click', function() {
-        const productId = this.getAttribute('data-id');
-        deleteProduct(productId);
-    });
-});
-
-// Exemplo de uso para adicionar produto (você deve adaptar para seu caso)
-document.querySelector('#addProductButton').addEventListener('click', function() {
-    const name = document.querySelector('#productName').value;
-    const description = document.querySelector('#productDescription').value;
-    const quantity = document.querySelector('#productQuantity').value;
-    const supplier = document.querySelector('#productSupplier').value;
-    const categoryId = document.querySelector('#productCategory').value;
-    addProduct(name, description, quantity, supplier, categoryId);
-});
-
-
-
-        // Lógica de edição de categorias
-        document.querySelectorAll('.editCategoryButton').forEach(function(button) {
-            button.addEventListener('click', function() {
-                var categoryId = this.getAttribute('data-id');
-                document.getElementById('editCategoryId').value = categoryId;
-                openModal('editCategoryModal');
-            });
-        });
-
-        // Lógica de exclusão de categorias
-        document.querySelectorAll('.deleteCategoryButton').forEach(function(button) {
-            button.addEventListener('click', function() {
-                var categoryId = this.getAttribute('data-id');
-                if (confirm('Tem certeza que deseja excluir esta categoria?')) {
-                    fetch('product_register.php?action=delete_category&id=' + categoryId)
-                        .then(response => response.json())
-                        .then(data => {
-                            alert(data.message); // Exibe a mensagem recebida
-                            if (data.success) {
-                                location.reload(); // Atualiza a página se a exclusão for bem-sucedida
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Erro:', error);
-                            alert('Erro ao excluir a categoria.');
-                        });
-                }
-            });
-        });
-
-        document.getElementById('deleteSelected').addEventListener('click', function() {
-            const selectedCheckboxes = document.querySelectorAll('input[name="select[]"]:checked');
-            const selectedIds = Array.from(selectedCheckboxes).map(checkbox => checkbox.value);
-
-            if (selectedIds.length > 0) {
-                if (confirm('Tem certeza que deseja excluir os produtos selecionados?')) {
-                    const formData = new FormData();
-                    formData.append('action', 'delete_selected');
-                    formData.append('ids', selectedIds.join(',')); // Enviar os IDs separados por vírgula
-
-                    fetch('product_register.php', {
-                            method: 'POST',
-                            body: formData
-                        })
-                        .then(response => response.text())
-                        .then(data => {
-                            alert('Produtos selecionados excluídos com sucesso.');
-                            location.reload(); // Atualiza a página para refletir as mudanças
-                        })
-                        .catch(error => {
-                            alert('Erro ao excluir os produtos selecionados.');
-                            console.error(error);
-                        });
-                }
-            } else {
-                alert('Nenhum produto selecionado.');
-            }
-        });
-
-        document.getElementById('searchForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            var searchQuery = document.getElementById('searchQuery').value;
-            var resultsTable = document.getElementById('searchResults').querySelector('tbody');
-            var noResultsDiv = document.getElementById('noResults');
-            var tableHead = document.getElementById('searchResults').querySelector('thead');
-
-            // Limpar os resultados anteriores
-            resultsTable.innerHTML = '';
-
-            // Fazer requisição AJAX
-            fetch('product_register.php?action=search&search=' + encodeURIComponent(searchQuery))
-                .then(response => response.text())
-                .then(data => {
-                    if (data === 'no-results') {
-                        noResultsDiv.style.display = 'block';
-                        tableHead.style.display = 'none';
-                    } else {
-                        noResultsDiv.style.display = 'none';
-                        tableHead.style.display = 'table-header-group';
-                        resultsTable.innerHTML = data;
-                    }
-                })
-                .catch(error => {
-                    console.error('Erro na pesquisa:', error);
-                });
         });
     </script>

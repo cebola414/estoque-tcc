@@ -181,6 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <header>
     <div style="display: flex; align-items: center;">
+        
         <a href="../Index.html"><img class="logo" src="../Imagens/Logo Supremo pequeno.png" alt="Logo Supremo Storage" />
         <h1>Supremo Storage</h1></a>
     </div>

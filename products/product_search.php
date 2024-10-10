@@ -14,7 +14,7 @@ if ($search) {
     $products = [];
 }
 
-// Output the search results in HTML table rows
+
 foreach ($products as $product) {
     echo "<tr>";
     echo "<td>" . htmlspecialchars($product['id']) . "</td>";
