@@ -80,7 +80,11 @@ function editProduct($pdo, $id, $name, $description, $quantity, $supplier, $cate
     $stmt = $pdo->prepare("UPDATE products SET name = ?, description = ?, quantity = ?, supplier = ?, category_id = ? WHERE id = ? AND user_id = ?");
     return executeStatement($stmt, [$name, $description, $quantity, $supplier, $categoryId, $id, $userId]);
 }
-
+function editCategory($pdo, $id, $categoryName, $userId)
+{
+    $stmt = $pdo->prepare("UPDATE categories SET name = ? WHERE id = ? AND user_id = ?");
+    return executeStatement($stmt, [$categoryName, $id, $userId]);
+}
 // Processar requisições POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
@@ -129,6 +133,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $result = addCategory($pdo, $name, $userId);
             echo json_encode($result); // Retorna a resposta em formato JSON
             exit();
+            case 'update_category':
+                if ($id) {
+                    $result = editCategory($pdo, $id, $name, $userId);
+                    echo json_encode($result); // Retorna a resposta em formato JSON
+                    exit();
+                }
+                break;
     }
 
     header('Location: product_register.php');
@@ -800,7 +811,28 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
                 });
         });
     }
+    document.getElementById('editCategoryForm')?.addEventListener('submit', function(e) {
+    e.preventDefault(); // Impede o envio do formulário
 
+    const formData = new FormData(this);
+
+    fetch('product_register.php', {
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => response.json()) // Tratando a resposta como JSON
+    .then(data => {
+        if (data.success) {
+            alert('Categoria editada com sucesso.'); // Mensagem de sucesso
+            location.reload(); // Atualiza a página
+        } else {
+            alert('Erro ao editar categoria: ' + (data.message || 'Erro desconhecido.')); // Mensagem de erro
+        }
+    })
+    .catch(error => {
+        alert('Erro ao editar categoria: ' + error); // Mensagem de erro
+    });
+});
     // Selecionar ou desmarcar todos os checkboxes
     document.getElementById('selectAll').addEventListener('change', function() {
         const checkboxes = document.querySelectorAll('input[name="select[]"]');
