@@ -454,7 +454,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
             <thead>
                 <tr>
                     <th><input type="checkbox" id="selectAll"></th>
-                    <th>ID</th>
                     <th>Nome</th>
                     <th>Descrição</th>
                     <th>Quantidade</th>
@@ -467,7 +466,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
                 <?php foreach ($products as $product): ?>
                     <tr>
                         <td><input type="checkbox" name="select[]" value="<?php echo htmlspecialchars($product['id']); ?>"></td>
-                        <td><?php echo htmlspecialchars($product['id']); ?></td>
                         <td><?php echo htmlspecialchars($product['name']); ?></td>
                         <td><?php echo htmlspecialchars($product['description']); ?></td>
                         <td><?php echo htmlspecialchars($product['quantity']); ?></td>
