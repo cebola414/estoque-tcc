@@ -80,6 +80,27 @@ function addCategory($pdo, $categoryName, $userId)
         return ['success' => false, 'message' => 'Erro ao adicionar categoria: ' . $e->getMessage()];
     }
 }
+function deleteCategory($pdo, $id, $userId) {
+    try {
+        $stmt = $pdo->prepare("DELETE FROM categories WHERE id = ? AND user_id = ?");
+        $stmt->execute([$id, $userId]);
+
+        return ['success' => $stmt->rowCount() > 0]; // Retorna true se uma linha foi afetada
+    } catch (PDOException $e) {
+        return ['success' => false, 'message' => 'Erro ao excluir categoria: ' . $e->getMessage()];
+    }
+}
+function editProduct($pdo, $id, $name, $description, $quantity, $supplier, $categoryId, $userId)
+{
+    try {
+        $stmt = $pdo->prepare("UPDATE products SET name = ?, description = ?, quantity = ?, supplier = ?, category_id = ? WHERE id = ? AND user_id = ?");
+        $stmt->execute([$name, $description, $quantity, $supplier, $categoryId, $id, $userId]);
+        return ['success' => true, 'message' => 'Produto atualizado com sucesso.'];
+    } catch (PDOException $e) {
+        return ['success' => false, 'message' => 'Erro ao atualizar produto: ' . $e->getMessage()];
+    }
+}
+
 
 // Processar requisições POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
@@ -96,6 +117,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         case 'add':
             $result = addProduct($pdo, $name, $description, $quantity, $supplier, $categoryId, $userId);
             break;
+            case 'update':
+                if ($id) {
+                    $stmt = $pdo->prepare("UPDATE products SET name = ?, description = ?, quantity = ?, supplier = ? WHERE id = ? AND user_id = ?");
+                    $stmt->execute([$name, $description, $quantity, $supplier, $id, $userId]);
+                }
+                break;
         case 'delete':
             // Excluir produto
             if ($id) {
@@ -776,39 +803,61 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
                 });
             });
         }
+        
 
-        // Função para pesquisa de produtos
-        const searchForm = document.getElementById('searchForm');
-        if (searchForm) {
-            searchForm.addEventListener('submit', function(e) {
-                e.preventDefault();
+ // Função para habilitar ações no modal de pesquisa
+function setupSearchActions() {
+    const searchResultsTable = document.getElementById('searchResults').querySelector('tbody');
 
-                const searchQuery = document.getElementById('searchQuery').value;
-                const resultsTable = document.getElementById('searchResults').querySelector('tbody');
-                const noResultsDiv = document.getElementById('noResults');
-                const tableHead = document.getElementById('searchResults').querySelector('thead');
-
-                // Limpar os resultados anteriores
-                resultsTable.innerHTML = '';
-
-                // Fazer requisição AJAX
-                fetch('product_register.php?action=search&search=' + encodeURIComponent(searchQuery))
-                    .then(response => response.text())
-                    .then(data => {
-                        if (data === 'no-results') {
-                            noResultsDiv.style.display = 'block';
-                            tableHead.style.display = 'none';
-                        } else {
-                            noResultsDiv.style.display = 'none';
-                            tableHead.style.display = 'table-header-group';
-                            resultsTable.innerHTML = data;
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Erro na pesquisa:', error);
-                    });
-            });
+    // Adiciona um listener para o evento 'click' em cada botão dentro do tbody da tabela de resultados
+    searchResultsTable.addEventListener('click', function(event) {
+        if (event.target.classList.contains('editButton')) {
+            const productId = event.target.getAttribute('data-id');
+            document.getElementById('editId').value = productId;
+            openModal('editModal');
+        } else if (event.target.classList.contains('deleteButton')) {
+            const productId = event.target.getAttribute('data-id');
+            deleteItem('product', productId);
         }
+    });
+}
+
+// Dentro da função de pesquisa de produtos
+const searchForm = document.getElementById('searchForm');
+if (searchForm) {
+    searchForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const searchQuery = document.getElementById('searchQuery').value;
+        const resultsTable = document.getElementById('searchResults').querySelector('tbody');
+        const noResultsDiv = document.getElementById('noResults');
+        const tableHead = document.getElementById('searchResults').querySelector('thead');
+
+        // Limpar os resultados anteriores
+        resultsTable.innerHTML = '';
+
+        // Fazer requisição AJAX
+        fetch('product_register.php?action=search&search=' + encodeURIComponent(searchQuery))
+            .then(response => response.text())
+            .then(data => {
+                if (data === 'no-results') {
+                    noResultsDiv.style.display = 'block';
+                    tableHead.style.display = 'none';
+                } else {
+                    noResultsDiv.style.display = 'none';
+                    tableHead.style.display = 'table-header-group';
+                    resultsTable.innerHTML = data;
+
+                    // Habilitar ações nos resultados
+                    setupSearchActions();
+                }
+            })
+            .catch(error => {
+                console.error('Erro na pesquisa:', error);
+            });
+    });
+}
+
         // Selecionar ou desmarcar todos os checkboxes
         document.getElementById('selectAll').addEventListener('change', function() {
             const checkboxes = document.querySelectorAll('input[name="select[]"]');
