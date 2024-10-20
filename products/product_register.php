@@ -70,6 +70,17 @@ function deleteSelectedProducts($pdo, $ids, $userId)
     }
 }
 
+function addCategory($pdo, $categoryName, $userId)
+{
+    try {
+        $stmt = $pdo->prepare("INSERT INTO categories (name, user_id) VALUES (?, ?)");
+        $stmt->execute([$categoryName, $userId]);
+        return ['success' => true];
+    } catch (PDOException $e) {
+        return ['success' => false, 'message' => 'Erro ao adicionar categoria: ' . $e->getMessage()];
+    }
+}
+
 // Processar requisições POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
@@ -129,6 +140,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 echo 'error'; // Caso o ID seja inválido
             }
             exit();
+            case 'add_category':
+                $result = addCategory($pdo, $name, $userId);
+                echo json_encode($result); // Retorna a resposta em formato JSON
+                exit();
     }
 
     header('Location: product_register.php');
@@ -801,6 +816,30 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
                 checkbox.checked = this.checked; // Define o estado dos checkboxes baseado no estado do checkbox "Selecionar Todos"
             }, this);
         });
+
+         // Função para adicionar categoria
+    document.getElementById('addCategoryForm')?.addEventListener('submit', function(e) {
+        e.preventDefault(); // Impede o envio do formulário
+
+        const formData = new FormData(this);
+        
+        fetch('product_register.php', {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => response.json()) // Tratando a resposta como JSON
+        .then(data => {
+            if (data.success) {
+                alert('Categoria adicionada com sucesso.');
+                location.reload(); // Atualiza a página
+            } else {
+                alert('Erro ao adicionar categoria: ' + (data.message || 'Erro desconhecido.'));
+            }
+        })
+        .catch(error => {
+            alert('Erro ao adicionar categoria: ' + error);
+        });
+    });
 
         // Inicialização de modais e ações
         setupModalEvents();
