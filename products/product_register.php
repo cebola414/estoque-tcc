@@ -760,19 +760,24 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
 
     // Habilitar ações no modal de pesquisa
     function setupSearchActions() {
-        const searchResultsTable = document.getElementById('searchResults').querySelector('tbody');
+    const searchResultsTable = document.getElementById('searchResults').querySelector('tbody');
 
-        searchResultsTable.addEventListener('click', event => {
-            if (event.target.classList.contains('editButton')) {
-                const productId = event.target.getAttribute('data-id');
-                document.getElementById('editId').value = productId;
-                openModal('editModal');
-            } else if (event.target.classList.contains('deleteButton')) {
-                const productId = event.target.getAttribute('data-id');
-                deleteItem('product', productId);
-            }
-        });
-    }
+    searchResultsTable.addEventListener('click', event => {
+        if (event.target.classList.contains('editButton')) {
+            const productId = event.target.getAttribute('data-id');
+            document.getElementById('editId').value = productId;
+
+            // Fechar o modal de pesquisa
+            closeModal(document.getElementById('searchModal'));
+
+            // Abrir o modal de edição
+            openModal('editModal');
+        } else if (event.target.classList.contains('deleteButton')) {
+            const productId = event.target.getAttribute('data-id');
+            deleteItem('product', productId);
+        }
+    });
+}
 
     // Função para pesquisa de produtos
     const searchForm = document.getElementById('searchForm');
