@@ -180,7 +180,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
         // Exibe cada produto encontrado na tabela de resultados
         foreach ($products as $product) {
             echo '<tr>
-                <td>' . htmlspecialchars($product['id']) . '</td>
+
                 <td>' . htmlspecialchars($product['name']) . '</td>
                 <td>' . htmlspecialchars($product['description']) . '</td>
                 <td>' . htmlspecialchars($product['quantity']) . '</td>
@@ -339,6 +339,12 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
         .buttonRed:hover {
             background-color: #6b0000;
         }
+
+        .deleteButton{
+            background-color: #ce0000;
+        }
+
+
 
         /* Estilos para o modal */
         .modal {
@@ -575,7 +581,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
             <table id="searchResults">
                 <thead style="display: none;">
                     <tr>
-                        <th>ID</th>
                         <th>Nome</th>
                         <th>Descrição</th>
                         <th>Quantidade</th>
