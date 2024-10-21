@@ -4,21 +4,24 @@ require_once '../includes/auth_check.php';
 require_once '../db/config.php';
 
 // Função para obter categorias de um usuário específico
-function getCategories($pdo, $userId) {
+function getCategories($pdo, $userId)
+{
     $stmt = $pdo->prepare("SELECT * FROM categories WHERE user_id = ?");
     $stmt->execute([$userId]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 // Função para obter o nome de usuário
-function getUser($pdo, $userId) {
+function getUser($pdo, $userId)
+{
     $stmt = $pdo->prepare("SELECT username FROM users WHERE id = ?");
     $stmt->execute([$userId]);
     return $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
 // Função para buscar produtos de um usuário, com suporte a pesquisa
-function getProducts($pdo, $userId, $searchQuery = '') {
+function getProducts($pdo, $userId, $searchQuery = '')
+{
     $sql = "SELECT p.*, c.name as category_name FROM products p 
             LEFT JOIN categories c ON p.category_id = c.id 
             WHERE p.user_id = ?";
@@ -38,7 +41,8 @@ function getProducts($pdo, $userId, $searchQuery = '') {
 }
 
 // Função para executar uma instrução SQL com tratamento de exceções
-function executeStatement($stmt, $params) {
+function executeStatement($stmt, $params)
+{
     try {
         $stmt->execute($params);
         return ['success' => true];
@@ -48,39 +52,45 @@ function executeStatement($stmt, $params) {
 }
 
 // Função para adicionar um novo produto
-function addProduct($pdo, $name, $description, $quantity, $supplier, $categoryId, $userId) {
+function addProduct($pdo, $name, $description, $quantity, $supplier, $categoryId, $userId)
+{
     $stmt = $pdo->prepare("INSERT INTO products (name, description, quantity, supplier, category_id, user_id) 
                            VALUES (?, ?, ?, ?, ?, ?)");
     return executeStatement($stmt, [$name, $description, $quantity, $supplier, $categoryId, $userId]);
 }
 
 // Função para excluir um produto específico
-function deleteProduct($pdo, $id, $userId) {
+function deleteProduct($pdo, $id, $userId)
+{
     $stmt = $pdo->prepare("DELETE FROM products WHERE id = ? AND user_id = ?");
     return executeStatement($stmt, [$id, $userId]);
 }
 
 // Função para excluir múltiplos produtos selecionados
-function deleteSelectedProducts($pdo, $ids, $userId) {
+function deleteSelectedProducts($pdo, $ids, $userId)
+{
     $placeholders = implode(',', array_fill(0, count($ids), '?'));
     $stmt = $pdo->prepare("DELETE FROM products WHERE id IN ($placeholders) AND user_id = ?");
     return executeStatement($stmt, array_merge($ids, [$userId]));
 }
 
 // Função para adicionar uma nova categoria
-function addCategory($pdo, $categoryName, $userId) {
+function addCategory($pdo, $categoryName, $userId)
+{
     $stmt = $pdo->prepare("INSERT INTO categories (name, user_id) VALUES (?, ?)");
     return executeStatement($stmt, [$categoryName, $userId]);
 }
 
 // Função para excluir uma categoria
-function deleteCategory($pdo, $id, $userId) {
+function deleteCategory($pdo, $id, $userId)
+{
     $stmt = $pdo->prepare("DELETE FROM categories WHERE id = ? AND user_id = ?");
     return executeStatement($stmt, [$id, $userId]);
 }
 
 // Função para editar um produto existente
-function editProduct($pdo, $id, $name, $description, $quantity, $supplier, $categoryId, $userId) {
+function editProduct($pdo, $id, $name, $description, $quantity, $supplier, $categoryId, $userId)
+{
     $stmt = $pdo->prepare("UPDATE products 
                            SET name = ?, description = ?, quantity = ?, supplier = ?, category_id = ? 
                            WHERE id = ? AND user_id = ?");
@@ -88,7 +98,8 @@ function editProduct($pdo, $id, $name, $description, $quantity, $supplier, $cate
 }
 
 // Função para editar uma categoria existente
-function editCategory($pdo, $id, $categoryName, $userId) {
+function editCategory($pdo, $id, $categoryName, $userId)
+{
     $stmt = $pdo->prepare("UPDATE categories SET name = ? WHERE id = ? AND user_id = ?");
     return executeStatement($stmt, [$categoryName, $id, $userId]);
 }
@@ -101,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $description = $_POST['description'] ?? '';
     $quantity = $_POST['quantity'] ?? 0;
     $supplier = $_POST['supplier'] ?? '';
-    $categoryId = $_POST['category_id'] ?? null; 
+    $categoryId = $_POST['category_id'] ?? null;
     $userId = $_SESSION['user_id'];
 
     // Switch para tratar as diferentes ações de produto e categoria
@@ -229,6 +240,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
             flex: 1;
         }
 
+        /* Informações do usuário no cabeçalho */
         .user-info {
             display: flex;
             align-items: center;
@@ -272,7 +284,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
             margin-bottom: 20px;
         }
 
-        /* Contêiner dos botões */
+        /* Contêiner dos botões principais */
         .button-container {
             display: flex;
             justify-content: center;
@@ -353,7 +365,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             overflow: hidden;
         }
-
 
         .modal-content .close {
             color: #888;
@@ -438,6 +449,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
             background-color: #e9e9e9;
         }
     </style>
+
 </head>
 
 <body>
@@ -636,271 +648,271 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
     </div>
 
     <script>
-    // Função para abrir um modal
-    function openModal(id) {
-        const modal = document.getElementById(id);
-        if (modal) {
-            modal.style.display = 'block'; // Exibe o modal
-        }
-    }
-
-    // Função para fechar um modal
-    function closeModal(modal) {
-        if (modal) {
-            modal.style.display = 'none'; // Esconde o modal
-        }
-    }
-
-    // Configuração de eventos para fechar modais
-    function setupModalEvents() {
-        const modals = document.querySelectorAll('.modal');
-        const closes = document.querySelectorAll('.modal .close'); // Seleciona todos os botões de fechar modais
-
-        // Adiciona evento de fechamento a cada botão 'close'
-        closes.forEach(close => {
-            close.addEventListener('click', () => {
-                closeModal(close.closest('.modal')); // Fecha o modal mais próximo
-            });
-        });
-
-        // Fecha o modal se clicar fora dele (na área do modal)
-        window.addEventListener('click', event => {
-            if (event.target.classList.contains('modal')) {
-                closeModal(event.target);
+        // Função para abrir um modal
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            if (modal) {
+                modal.style.display = 'block'; // Exibe o modal
             }
-        });
-    }
+        }
 
-    // Função genérica para excluir itens (produtos ou categorias)
-    function deleteItem(type, id) {
-        const confirmMessage = `Tem certeza que deseja excluir este ${type === 'product' ? 'produto' : 'categoria'}?`;
+        // Função para fechar um modal
+        function closeModal(modal) {
+            if (modal) {
+                modal.style.display = 'none'; // Esconde o modal
+            }
+        }
 
-        if (confirm(confirmMessage)) {
-            const formData = new FormData();
-            formData.append('action', type === 'product' ? 'delete' : 'delete_category');
-            formData.append('id', id);
+        // Configuração de eventos para fechar modais
+        function setupModalEvents() {
+            const modals = document.querySelectorAll('.modal');
+            const closes = document.querySelectorAll('.modal .close'); // Seleciona todos os botões de fechar modais
 
-            // Requisição para excluir o item via fetch
-            fetch('product_register.php', {
-                method: 'POST',
-                body: formData,
-            })
-            .then(response => response.text())
-            .then(data => {
-                if (data === 'success') {
-                    alert(`${type === 'product' ? 'Produto' : 'Categoria'} excluído com sucesso.`);
-                    location.reload(); // Atualiza a página
-                } else {
-                    alert(`Erro ao excluir o ${type === 'product' ? 'produto' : 'categoria'}.`);
-                    console.error('Erro:', data);
+            // Adiciona evento de fechamento a cada botão 'close'
+            closes.forEach(close => {
+                close.addEventListener('click', () => {
+                    closeModal(close.closest('.modal')); // Fecha o modal mais próximo
+                });
+            });
+
+            // Fecha o modal se clicar fora dele (na área do modal)
+            window.addEventListener('click', event => {
+                if (event.target.classList.contains('modal')) {
+                    closeModal(event.target);
                 }
-            })
-            .catch(error => {
-                alert(`Erro ao excluir o ${type === 'product' ? 'produto' : 'categoria'}.`);
-                console.error('Erro:', error);
             });
         }
-    }
 
-    // Função para configurar ações de edição e exclusão de produtos
-    function setupProductActions() {
-        // Configura o botão de edição
-        document.querySelectorAll('.editButton').forEach(button => {
-            button.addEventListener('click', () => {
-                const productId = button.getAttribute('data-id');
-                document.getElementById('editId').value = productId;
-                openModal('editModal'); // Abre o modal de edição
-            });
-        });
+        // Função genérica para excluir itens (produtos ou categorias)
+        function deleteItem(type, id) {
+            const confirmMessage = `Tem certeza que deseja excluir este ${type === 'product' ? 'produto' : 'categoria'}?`;
 
-        // Configura o botão de exclusão
-        document.querySelectorAll('.deleteButton').forEach(button => {
-            button.addEventListener('click', () => {
-                const productId = button.getAttribute('data-id');
-                deleteItem('product', productId); // Exclui o produto
-            });
-        });
+            if (confirm(confirmMessage)) {
+                const formData = new FormData();
+                formData.append('action', type === 'product' ? 'delete' : 'delete_category');
+                formData.append('id', id);
 
-        // Configura o botão de exclusão de múltiplos produtos
-        const deleteSelectedButton = document.getElementById('deleteSelected');
-        if (deleteSelectedButton) {
-            deleteSelectedButton.addEventListener('click', () => {
-                const selectedIds = Array.from(document.querySelectorAll('input[name="select[]"]:checked')).map(checkbox => checkbox.value);
-
-                if (selectedIds.length > 0 && confirm('Tem certeza que deseja excluir os produtos selecionados?')) {
-                    const formData = new FormData();
-                    formData.append('action', 'delete_selected');
-                    formData.append('ids', selectedIds.join(',')); // IDs separados por vírgula
-
-                    fetch('product_register.php', {
+                // Requisição para excluir o item via fetch
+                fetch('product_register.php', {
                         method: 'POST',
-                        body: formData
+                        body: formData,
                     })
                     .then(response => response.text())
                     .then(data => {
                         if (data === 'success') {
-                            alert('Produtos selecionados excluídos com sucesso.');
-                            location.reload();
+                            alert(`${type === 'product' ? 'Produto' : 'Categoria'} excluído com sucesso.`);
+                            location.reload(); // Atualiza a página
                         } else {
-                            alert('Erro ao excluir os produtos selecionados.');
+                            alert(`Erro ao excluir o ${type === 'product' ? 'produto' : 'categoria'}.`);
                             console.error('Erro:', data);
                         }
                     })
                     .catch(error => {
-                        alert('Erro ao excluir os produtos selecionados.');
+                        alert(`Erro ao excluir o ${type === 'product' ? 'produto' : 'categoria'}.`);
                         console.error('Erro:', error);
                     });
-                } else {
-                    alert('Nenhum produto selecionado.');
+            }
+        }
+
+        // Função para configurar ações de edição e exclusão de produtos
+        function setupProductActions() {
+            // Configura o botão de edição
+            document.querySelectorAll('.editButton').forEach(button => {
+                button.addEventListener('click', () => {
+                    const productId = button.getAttribute('data-id');
+                    document.getElementById('editId').value = productId;
+                    openModal('editModal'); // Abre o modal de edição
+                });
+            });
+
+            // Configura o botão de exclusão
+            document.querySelectorAll('.deleteButton').forEach(button => {
+                button.addEventListener('click', () => {
+                    const productId = button.getAttribute('data-id');
+                    deleteItem('product', productId); // Exclui o produto
+                });
+            });
+
+            // Configura o botão de exclusão de múltiplos produtos
+            const deleteSelectedButton = document.getElementById('deleteSelected');
+            if (deleteSelectedButton) {
+                deleteSelectedButton.addEventListener('click', () => {
+                    const selectedIds = Array.from(document.querySelectorAll('input[name="select[]"]:checked')).map(checkbox => checkbox.value);
+
+                    if (selectedIds.length > 0 && confirm('Tem certeza que deseja excluir os produtos selecionados?')) {
+                        const formData = new FormData();
+                        formData.append('action', 'delete_selected');
+                        formData.append('ids', selectedIds.join(',')); // IDs separados por vírgula
+
+                        fetch('product_register.php', {
+                                method: 'POST',
+                                body: formData
+                            })
+                            .then(response => response.text())
+                            .then(data => {
+                                if (data === 'success') {
+                                    alert('Produtos selecionados excluídos com sucesso.');
+                                    location.reload();
+                                } else {
+                                    alert('Erro ao excluir os produtos selecionados.');
+                                    console.error('Erro:', data);
+                                }
+                            })
+                            .catch(error => {
+                                alert('Erro ao excluir os produtos selecionados.');
+                                console.error('Erro:', error);
+                            });
+                    } else {
+                        alert('Nenhum produto selecionado.');
+                    }
+                });
+            }
+        }
+
+        // Função para configurar ações de categorias (edição e exclusão)
+        function setupCategoryActions() {
+            // Configura o botão de edição de categorias
+            document.querySelectorAll('.editCategoryButton').forEach(button => {
+                button.addEventListener('click', () => {
+                    const categoryId = button.getAttribute('data-id');
+                    document.getElementById('editCategoryId').value = categoryId;
+                    openModal('editCategoryModal'); // Abre o modal de edição de categoria
+                });
+            });
+
+            // Configura o botão de exclusão de categorias
+            document.querySelectorAll('.deleteCategoryButton').forEach(button => {
+                button.addEventListener('click', () => {
+                    const categoryId = button.getAttribute('data-id');
+                    deleteItem('category', categoryId); // Exclui a categoria
+                });
+            });
+        }
+
+        // Função para configurar ações dentro do modal de pesquisa
+        function setupSearchActions() {
+            const searchResultsTable = document.getElementById('searchResults').querySelector('tbody');
+
+            // Configura as ações de editar e excluir dentro do modal de pesquisa
+            searchResultsTable.addEventListener('click', event => {
+                if (event.target.classList.contains('editButton')) {
+                    const productId = event.target.getAttribute('data-id');
+                    document.getElementById('editId').value = productId;
+
+                    // Fecha o modal de pesquisa
+                    closeModal(document.getElementById('searchModal'));
+
+                    // Abre o modal de edição
+                    openModal('editModal');
+                } else if (event.target.classList.contains('deleteButton')) {
+                    const productId = event.target.getAttribute('data-id');
+                    deleteItem('product', productId); // Exclui o produto
                 }
             });
         }
-    }
 
-    // Função para configurar ações de categorias (edição e exclusão)
-    function setupCategoryActions() {
-        // Configura o botão de edição de categorias
-        document.querySelectorAll('.editCategoryButton').forEach(button => {
-            button.addEventListener('click', () => {
-                const categoryId = button.getAttribute('data-id');
-                document.getElementById('editCategoryId').value = categoryId;
-                openModal('editCategoryModal'); // Abre o modal de edição de categoria
+        // Função para pesquisa de produtos
+        const searchForm = document.getElementById('searchForm');
+        if (searchForm) {
+            searchForm.addEventListener('submit', e => {
+                e.preventDefault();
+
+                const searchQuery = document.getElementById('searchQuery').value;
+                const resultsTable = document.getElementById('searchResults').querySelector('tbody');
+                const noResultsDiv = document.getElementById('noResults');
+                const tableHead = document.getElementById('searchResults').querySelector('thead');
+
+                // Limpa os resultados anteriores
+                resultsTable.innerHTML = '';
+
+                // Requisição AJAX para buscar os produtos
+                fetch('product_register.php?action=search&search=' + encodeURIComponent(searchQuery))
+                    .then(response => response.text())
+                    .then(data => {
+                        if (data === 'no-results') {
+                            noResultsDiv.style.display = 'block';
+                            tableHead.style.display = 'none';
+                        } else {
+                            noResultsDiv.style.display = 'none';
+                            tableHead.style.display = 'table-header-group';
+                            resultsTable.innerHTML = data;
+
+                            // Habilita as ações nos resultados de pesquisa
+                            setupSearchActions();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro na pesquisa:', error);
+                    });
             });
-        });
+        }
 
-        // Configura o botão de exclusão de categorias
-        document.querySelectorAll('.deleteCategoryButton').forEach(button => {
-            button.addEventListener('click', () => {
-                const categoryId = button.getAttribute('data-id');
-                deleteItem('category', categoryId); // Exclui a categoria
-            });
-        });
-    }
+        // Configura o formulário de edição de categoria
+        document.getElementById('editCategoryForm')?.addEventListener('submit', function(e) {
+            e.preventDefault(); // Impede o envio padrão do formulário
 
-    // Função para configurar ações dentro do modal de pesquisa
-    function setupSearchActions() {
-        const searchResultsTable = document.getElementById('searchResults').querySelector('tbody');
+            const formData = new FormData(this);
 
-        // Configura as ações de editar e excluir dentro do modal de pesquisa
-        searchResultsTable.addEventListener('click', event => {
-            if (event.target.classList.contains('editButton')) {
-                const productId = event.target.getAttribute('data-id');
-                document.getElementById('editId').value = productId;
-
-                // Fecha o modal de pesquisa
-                closeModal(document.getElementById('searchModal'));
-
-                // Abre o modal de edição
-                openModal('editModal');
-            } else if (event.target.classList.contains('deleteButton')) {
-                const productId = event.target.getAttribute('data-id');
-                deleteItem('product', productId); // Exclui o produto
-            }
-        });
-    }
-
-    // Função para pesquisa de produtos
-    const searchForm = document.getElementById('searchForm');
-    if (searchForm) {
-        searchForm.addEventListener('submit', e => {
-            e.preventDefault();
-
-            const searchQuery = document.getElementById('searchQuery').value;
-            const resultsTable = document.getElementById('searchResults').querySelector('tbody');
-            const noResultsDiv = document.getElementById('noResults');
-            const tableHead = document.getElementById('searchResults').querySelector('thead');
-
-            // Limpa os resultados anteriores
-            resultsTable.innerHTML = '';
-
-            // Requisição AJAX para buscar os produtos
-            fetch('product_register.php?action=search&search=' + encodeURIComponent(searchQuery))
-                .then(response => response.text())
+            // Requisição para editar a categoria
+            fetch('product_register.php', {
+                    method: 'POST',
+                    body: formData,
+                })
+                .then(response => response.json())
                 .then(data => {
-                    if (data === 'no-results') {
-                        noResultsDiv.style.display = 'block';
-                        tableHead.style.display = 'none';
+                    if (data.success) {
+                        alert('Categoria editada com sucesso.');
+                        location.reload(); // Atualiza a página
                     } else {
-                        noResultsDiv.style.display = 'none';
-                        tableHead.style.display = 'table-header-group';
-                        resultsTable.innerHTML = data;
-
-                        // Habilita as ações nos resultados de pesquisa
-                        setupSearchActions();
+                        alert('Erro ao editar categoria: ' + (data.message || 'Erro desconhecido.'));
                     }
                 })
                 .catch(error => {
-                    console.error('Erro na pesquisa:', error);
+                    alert('Erro ao editar categoria: ' + error);
                 });
         });
-    }
 
-    // Configura o formulário de edição de categoria
-    document.getElementById('editCategoryForm')?.addEventListener('submit', function(e) {
-        e.preventDefault(); // Impede o envio padrão do formulário
-
-        const formData = new FormData(this);
-
-        // Requisição para editar a categoria
-        fetch('product_register.php', {
-            method: 'POST',
-            body: formData,
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Categoria editada com sucesso.');
-                location.reload(); // Atualiza a página
-            } else {
-                alert('Erro ao editar categoria: ' + (data.message || 'Erro desconhecido.'));
-            }
-        })
-        .catch(error => {
-            alert('Erro ao editar categoria: ' + error);
+        // Função para selecionar ou desmarcar todos os checkboxes
+        document.getElementById('selectAll').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('input[name="select[]"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = this.checked; // Define o estado dos checkboxes com base no checkbox "Selecionar Todos"
+            });
         });
-    });
 
-    // Função para selecionar ou desmarcar todos os checkboxes
-    document.getElementById('selectAll').addEventListener('change', function() {
-        const checkboxes = document.querySelectorAll('input[name="select[]"]');
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = this.checked; // Define o estado dos checkboxes com base no checkbox "Selecionar Todos"
+        // Configura o formulário de adicionar categoria
+        document.getElementById('addCategoryForm')?.addEventListener('submit', function(e) {
+            e.preventDefault(); // Impede o envio padrão do formulário
+
+            const formData = new FormData(this);
+
+            // Requisição para adicionar uma nova categoria
+            fetch('product_register.php', {
+                    method: 'POST',
+                    body: formData,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Categoria adicionada com sucesso.');
+                        location.reload(); // Atualiza a página
+                    } else {
+                        alert('Erro ao adicionar categoria: ' + (data.message || 'Erro desconhecido.'));
+                    }
+                })
+                .catch(error => {
+                    alert('Erro ao adicionar categoria: ' + error);
+                });
         });
-    });
 
-    // Configura o formulário de adicionar categoria
-    document.getElementById('addCategoryForm')?.addEventListener('submit', function(e) {
-        e.preventDefault(); // Impede o envio padrão do formulário
+        // Inicializa eventos e ações de modais e produtos
+        setupModalEvents();
+        setupProductActions();
+        setupCategoryActions();
 
-        const formData = new FormData(this);
-
-        // Requisição para adicionar uma nova categoria
-        fetch('product_register.php', {
-            method: 'POST',
-            body: formData,
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Categoria adicionada com sucesso.');
-                location.reload(); // Atualiza a página
-            } else {
-                alert('Erro ao adicionar categoria: ' + (data.message || 'Erro desconhecido.'));
-            }
-        })
-        .catch(error => {
-            alert('Erro ao adicionar categoria: ' + error);
-        });
-    });
-
-    // Inicializa eventos e ações de modais e produtos
-    setupModalEvents();
-    setupProductActions();
-    setupCategoryActions();
-
-    // Eventos de abertura de modais
-    document.getElementById('openAddModal')?.addEventListener('click', () => openModal('addModal'));
-    document.getElementById('openSearchModal')?.addEventListener('click', () => openModal('searchModal'));
-    document.getElementById('openCategoryModal')?.addEventListener('click', () => openModal('categoryModal'));
-    document.getElementById('openAddCategoryModal')?.addEventListener('click', () => openModal('addCategoryModal'));
-</script>
+        // Eventos de abertura de modais
+        document.getElementById('openAddModal')?.addEventListener('click', () => openModal('addModal'));
+        document.getElementById('openSearchModal')?.addEventListener('click', () => openModal('searchModal'));
+        document.getElementById('openCategoryModal')?.addEventListener('click', () => openModal('categoryModal'));
+        document.getElementById('openAddCategoryModal')?.addEventListener('click', () => openModal('addCategoryModal'));
+    </script>
