@@ -10,17 +10,20 @@ function getCategories($pdo, $userId)
     $stmt->execute([$userId]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
+
 // Função para editar um fornecedor existente
 function editSupplier($pdo, $id, $name, $address, $contact, $userId)
 {
     $stmt = $pdo->prepare("UPDATE suppliers SET name = ?, address = ?, contact = ? WHERE id = ? AND user_id = ?");
     return executeStatement($stmt, [$name, $address, $contact, $id, $userId]);
 }
+
 function deleteSupplier($pdo, $id, $userId)
 {
     $stmt = $pdo->prepare("DELETE FROM suppliers WHERE id = ? AND user_id = ?");
     return executeStatement($stmt, [$id, $userId]);
 }
+
 // Função para obter fornecedores de um usuário específico
 function getSuppliers($pdo, $userId)
 {
@@ -34,6 +37,7 @@ function addSupplier($pdo, $name, $address, $contact, $userId)
     $stmt = $pdo->prepare("INSERT INTO suppliers (name, address, contact, user_id) VALUES (?, ?, ?, ?)");
     return executeStatement($stmt, [$name, $address, $contact, $userId]);
 }
+
 // Função para obter o nome de usuário
 function getUser($pdo, $userId)
 {
@@ -141,7 +145,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $categoryId = $_POST['category_id'] ?? null;
     $userId = $_SESSION['user_id'];
 
-
     // Switch para tratar as diferentes ações de produto e categoria
     switch ($action) {
         case 'add':
@@ -196,17 +199,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 exit();
             }
             break;
-            case 'edit_supplier':
-                if ($id) {
-                    $result = editSupplier($pdo, $id, $name, $address, $contact, $userId);
-                    if ($result['success']) {
-                        echo json_encode(['status' => 'success', 'message' => 'Fornecedor atualizado com sucesso!']);
-                    } else {
-                        echo json_encode(['status' => 'error', 'message' => 'Erro ao atualizar fornecedor.']);
-                    }
-                    exit(); // Impede que o código continue executando
+        case 'edit_supplier':
+            if ($id) {
+                $result = editSupplier($pdo, $id, $name, $address, $contact, $userId);
+                if ($result['success']) {
+                    echo json_encode(['status' => 'success', 'message' => 'Fornecedor atualizado com sucesso!']);
+                } else {
+                    echo json_encode(['status' => 'error', 'message' => 'Erro ao atualizar fornecedor.']);
                 }
-                break;
+                exit(); // Impede que o código continue executando
+            }
+            break;
     }
 
     // Redireciona após o processamento da ação
@@ -395,7 +398,13 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
             background-color: #ce0000;
         }
 
+.buttonSup{
+    background-color: #f75711;
+}
 
+.buttonSup:hover{
+    background-color: #d94404;
+}
 
         /* Estilos para o modal */
         .modal {
@@ -496,6 +505,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
 
         th {
             background-color: #f4f4f4;
+            
         }
 
         tr:nth-child(even) {
@@ -516,7 +526,9 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
         <div class="user-info">
             <span><?php echo htmlspecialchars($user['username']); ?></span>
             <form id="logoutForm" action="logout.php" method="post">
-                <button type="submit" class="buttonLogout"><img src="../imagens/icons8-logout-100.png" class="imglogout">Sair</button>
+                <button type="submit" class="buttonLogout">
+                    <img src="../imagens/icons8-logout-100.png" class="imglogout">Sair
+                </button>
             </form>
         </div>
     </header>
@@ -527,7 +539,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
             <button id="openSearchModal" class="buttonSearch">Pesquisar</button>
             <button id="deleteSelected" class="buttonRed">Excluir Selecionados</button>
             <button id="openCategoryModal" class="buttonAdd">Gerenciar Categorias</button>
-            <button id="openManageSuppliersModal">Gerenciar Fornecedores</button>
+            <button id="openManageSuppliersModal" class="buttonSup">Gerenciar Fornecedores</button>
         </div>
 
         <!-- Tabela de Produtos -->
@@ -603,43 +615,49 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
         </div>
     </div>
 
- <!-- Modal de Edição de Produto -->
-<div id="editModal" class="modal">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2>Editar Produto</h2>
-        <form id="editProductForm" method="post">
-            <input type="hidden" name="action" value="update">
-            <input type="hidden" id="editId" name="id">
-            <label for="editName">Nome:</label>
-            <input type="text" id="editName" name="name" required><br>
-            <label for="editDescription">Descrição:</label>
-            <input type="text" id="editDescription" name="description" required><br>
-            <label for="editQuantity">Quantidade:</label>
-            <input type="number" id="editQuantity" name="quantity" required><br>
-            <label for="editSupplier">Fornecedor:</label>
-            <select id="editSupplier" name="supplier" required>
-                <option value="" disabled selected>Selecione um fornecedor</option>
-                <?php foreach ($suppliers as $supplier): ?>
-                    <option value="<?php echo htmlspecialchars($supplier['id']); ?>">
-                        <?php echo htmlspecialchars($supplier['name']); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select><br>
-            <label for="editCategory">Categoria:</label>
-            <select id="editCategory" name="category_id" required>
-                <option value="" disabled selected>Selecione uma categoria</option>
-                <?php foreach ($categories as $category): ?>
-                    <option value="<?php echo htmlspecialchars($category['id']); ?>">
-                        <?php echo htmlspecialchars($category['name']); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select><br>
-            <button type="submit">Salvar</button>
-        </form>
-    </div>
-</div>
+    <!-- Modal de Edição de Produto -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Editar Produto</h2>
+            <form id="editProductForm" method="post">
+                <input type="hidden" name="action" value="update">
+                <input type="hidden" id="editId" name="id">
+                <label for="editName">Nome:</label>
+                <input type="text" id="editName" name="name" required><br>
 
+                <label for="editDescription">Descrição:</label>
+                <input type="text" id="editDescription" name="description" required><br>
+
+                <label for="editQuantity">Quantidade:</label>
+                <input type="number" id="editQuantity" name="quantity" required><br>
+
+                <label for="editSupplier">Fornecedor:</label>
+                <select id="editSupplier" name="supplier" required>
+                    <option value="" disabled selected>Selecione um fornecedor</option>
+                    <?php foreach ($suppliers as $supplier): ?>
+                        <option value="<?php echo htmlspecialchars($supplier['id']); ?>">
+                            <?php echo htmlspecialchars($supplier['name']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select><br>
+
+                <label for="editCategory">Categoria:</label>
+                <select id="editCategory" name="category_id" required>
+                    <option value="" disabled selected>Selecione uma categoria</option>
+                    <?php foreach ($categories as $category): ?>
+                        <option value="<?php echo htmlspecialchars($category['id']); ?>">
+                            <?php echo htmlspecialchars($category['name']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select><br>
+
+                <button type="submit">Salvar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Pesquisa -->
     <div id="searchModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
@@ -665,7 +683,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
             </table>
         </div>
     </div>
-
 
     <!-- Modal de Gerenciamento de Categorias -->
     <div id="categoryModal" class="modal">
@@ -724,6 +741,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
         </div>
     </div>
 
+    <!-- Modal de Gerenciamento de Fornecedores -->
     <div id="manageSuppliersModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
@@ -755,7 +773,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
         </div>
     </div>
 
-
     <!-- Modal de Adicionar Fornecedor -->
     <div id="addSupplierModal" class="modal">
         <div class="modal-content">
@@ -763,7 +780,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
             <h2>Adicionar Fornecedor</h2>
             <form id="addSupplierForm" method="post">
                 <input type="hidden" name="action" value="add_supplier">
-
                 <label for="supplierName">Nome do Fornecedor:</label>
                 <input type="text" id="supplierName" name="name" required><br>
 
@@ -778,28 +794,28 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
         </div>
     </div>
 
- <!-- Modal de Edição de Fornecedor -->
-<div id="editSupplierModal" class="modal">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2>Editar Fornecedor</h2>
-        <form id="editSupplierForm" method="post">
-            <input type="hidden" name="action" value="edit_supplier">
-            <input type="hidden" id="editSupplierId" name="id">
-            <label for="editSupplierName">Nome:</label>
-            <input type="text" id="editSupplierName" name="name" required><br>
+    <!-- Modal de Edição de Fornecedor -->
+    <div id="editSupplierModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Editar Fornecedor</h2>
+            <form id="editSupplierForm" method="post">
+                <input type="hidden" name="action" value="edit_supplier">
+                <input type="hidden" id="editSupplierId" name="id">
+                <label for="editSupplierName">Nome:</label>
+                <input type="text" id="editSupplierName" name="name" required><br>
 
-            <label for="editSupplierAddress">Endereço:</label>
-            <input type="text" id="editSupplierAddress" name="address" required><br>
+                <label for="editSupplierAddress">Endereço:</label>
+                <input type="text" id="editSupplierAddress" name="address" required><br>
 
-            <label for="editSupplierContact">Contato:</label>
-            <input type="text" id="editSupplierContact" name="contact" required><br>
+                <label for="editSupplierContact">Contato:</label>
+                <input type="text" id="editSupplierContact" name="contact" required><br>
 
-            <button type="submit">Salvar</button>
-        </form>
+                <button type="submit">Salvar</button>
+            </form>
+        </div>
     </div>
-</div>
-
+</body>
 
 
     <script>
