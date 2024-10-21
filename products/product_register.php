@@ -1,27 +1,30 @@
 <?php
+// Inclusão de arquivos de configuração e autenticação
 require_once '../includes/auth_check.php';
 require_once '../db/config.php';
 
-// Funções auxiliares
-function getCategories($pdo, $userId)
-{
+// Função para obter categorias de um usuário específico
+function getCategories($pdo, $userId) {
     $stmt = $pdo->prepare("SELECT * FROM categories WHERE user_id = ?");
     $stmt->execute([$userId]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function getUser($pdo, $userId)
-{
+// Função para obter o nome de usuário
+function getUser($pdo, $userId) {
     $stmt = $pdo->prepare("SELECT username FROM users WHERE id = ?");
     $stmt->execute([$userId]);
     return $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
-function getProducts($pdo, $userId, $searchQuery = '')
-{
-    $sql = "SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id WHERE p.user_id = ?";
+// Função para buscar produtos de um usuário, com suporte a pesquisa
+function getProducts($pdo, $userId, $searchQuery = '') {
+    $sql = "SELECT p.*, c.name as category_name FROM products p 
+            LEFT JOIN categories c ON p.category_id = c.id 
+            WHERE p.user_id = ?";
     $params = [$userId];
 
+    // Adiciona a busca por nome ou descrição, caso o termo de pesquisa seja fornecido
     if (!empty($searchQuery)) {
         $sql .= " AND (p.name LIKE ? OR p.description LIKE ?)";
         $searchTerm = '%' . $searchQuery . '%';
@@ -34,8 +37,8 @@ function getProducts($pdo, $userId, $searchQuery = '')
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function executeStatement($stmt, $params)
-{
+// Função para executar uma instrução SQL com tratamento de exceções
+function executeStatement($stmt, $params) {
     try {
         $stmt->execute($params);
         return ['success' => true];
@@ -44,47 +47,52 @@ function executeStatement($stmt, $params)
     }
 }
 
-function addProduct($pdo, $name, $description, $quantity, $supplier, $categoryId, $userId)
-{
-    $stmt = $pdo->prepare("INSERT INTO products (name, description, quantity, supplier, category_id, user_id) VALUES (?, ?, ?, ?, ?, ?)");
+// Função para adicionar um novo produto
+function addProduct($pdo, $name, $description, $quantity, $supplier, $categoryId, $userId) {
+    $stmt = $pdo->prepare("INSERT INTO products (name, description, quantity, supplier, category_id, user_id) 
+                           VALUES (?, ?, ?, ?, ?, ?)");
     return executeStatement($stmt, [$name, $description, $quantity, $supplier, $categoryId, $userId]);
 }
 
-function deleteProduct($pdo, $id, $userId)
-{
+// Função para excluir um produto específico
+function deleteProduct($pdo, $id, $userId) {
     $stmt = $pdo->prepare("DELETE FROM products WHERE id = ? AND user_id = ?");
     return executeStatement($stmt, [$id, $userId]);
 }
 
-function deleteSelectedProducts($pdo, $ids, $userId)
-{
+// Função para excluir múltiplos produtos selecionados
+function deleteSelectedProducts($pdo, $ids, $userId) {
     $placeholders = implode(',', array_fill(0, count($ids), '?'));
     $stmt = $pdo->prepare("DELETE FROM products WHERE id IN ($placeholders) AND user_id = ?");
     return executeStatement($stmt, array_merge($ids, [$userId]));
 }
 
-function addCategory($pdo, $categoryName, $userId)
-{
+// Função para adicionar uma nova categoria
+function addCategory($pdo, $categoryName, $userId) {
     $stmt = $pdo->prepare("INSERT INTO categories (name, user_id) VALUES (?, ?)");
     return executeStatement($stmt, [$categoryName, $userId]);
 }
 
-function deleteCategory($pdo, $id, $userId)
-{
+// Função para excluir uma categoria
+function deleteCategory($pdo, $id, $userId) {
     $stmt = $pdo->prepare("DELETE FROM categories WHERE id = ? AND user_id = ?");
     return executeStatement($stmt, [$id, $userId]);
 }
 
-function editProduct($pdo, $id, $name, $description, $quantity, $supplier, $categoryId, $userId)
-{
-    $stmt = $pdo->prepare("UPDATE products SET name = ?, description = ?, quantity = ?, supplier = ?, category_id = ? WHERE id = ? AND user_id = ?");
+// Função para editar um produto existente
+function editProduct($pdo, $id, $name, $description, $quantity, $supplier, $categoryId, $userId) {
+    $stmt = $pdo->prepare("UPDATE products 
+                           SET name = ?, description = ?, quantity = ?, supplier = ?, category_id = ? 
+                           WHERE id = ? AND user_id = ?");
     return executeStatement($stmt, [$name, $description, $quantity, $supplier, $categoryId, $id, $userId]);
 }
-function editCategory($pdo, $id, $categoryName, $userId)
-{
+
+// Função para editar uma categoria existente
+function editCategory($pdo, $id, $categoryName, $userId) {
     $stmt = $pdo->prepare("UPDATE categories SET name = ? WHERE id = ? AND user_id = ?");
     return executeStatement($stmt, [$categoryName, $id, $userId]);
 }
+
 // Processar requisições POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
@@ -96,6 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $categoryId = $_POST['category_id'] ?? null; 
     $userId = $_SESSION['user_id'];
 
+    // Switch para tratar as diferentes ações de produto e categoria
     switch ($action) {
         case 'add':
             $result = addProduct($pdo, $name, $description, $quantity, $supplier, $categoryId, $userId);
@@ -125,39 +134,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $result = deleteCategory($pdo, $id, $userId);
                 echo $result['success'] ? 'success' : 'error';
                 exit();
-            } else {
-                echo 'error'; // Caso o ID seja inválido
-                exit();
             }
+            break;
         case 'add_category':
             $result = addCategory($pdo, $name, $userId);
             echo json_encode($result); // Retorna a resposta em formato JSON
             exit();
-            case 'update_category':
-                if ($id) {
-                    $result = editCategory($pdo, $id, $name, $userId);
-                    echo json_encode($result); // Retorna a resposta em formato JSON
-                    exit();
-                }
-                break;
+        case 'update_category':
+            if ($id) {
+                $result = editCategory($pdo, $id, $name, $userId);
+                echo json_encode($result); // Retorna a resposta em formato JSON
+                exit();
+            }
+            break;
     }
 
+    // Redireciona após o processamento da ação
     header('Location: product_register.php');
     exit();
 }
 
-// Carregar produtos e categorias
+// Carregar produtos e categorias para exibição
 $searchQuery = $_GET['search'] ?? '';
 $userId = $_SESSION['user_id'];
 $products = getProducts($pdo, $userId, $searchQuery);
 $user = getUser($pdo, $userId);
 $categories = getCategories($pdo, $userId);
 
-// Retornar produtos para pesquisa via AJAX
+// Retorna os produtos encontrados para a pesquisa via AJAX
 if (isset($_GET['action']) && $_GET['action'] === 'search') {
     $products = getProducts($pdo, $userId, $searchQuery);
 
     if (count($products) > 0) {
+        // Exibe cada produto encontrado na tabela de resultados
         foreach ($products as $product) {
             echo '<tr>
                 <td>' . htmlspecialchars($product['id']) . '</td>
@@ -173,11 +182,13 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
             </tr>';
         }
     } else {
+        // Caso não haja resultados, retorna 'no-results'
         echo 'no-results';
     }
     exit();
 }
 ?>
+
 
 
 <!DOCTYPE html>
@@ -627,30 +638,34 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
     </div>
 
     <script>
-    // Funções de controle de modais
+    // Função para abrir um modal
     function openModal(id) {
         const modal = document.getElementById(id);
         if (modal) {
-            modal.style.display = 'block';
+            modal.style.display = 'block'; // Exibe o modal
         }
     }
 
+    // Função para fechar um modal
     function closeModal(modal) {
         if (modal) {
-            modal.style.display = 'none';
+            modal.style.display = 'none'; // Esconde o modal
         }
     }
 
+    // Configuração de eventos para fechar modais
     function setupModalEvents() {
         const modals = document.querySelectorAll('.modal');
-        const closes = document.querySelectorAll('.modal .close');
+        const closes = document.querySelectorAll('.modal .close'); // Seleciona todos os botões de fechar modais
 
+        // Adiciona evento de fechamento a cada botão 'close'
         closes.forEach(close => {
             close.addEventListener('click', () => {
-                closeModal(close.closest('.modal'));
+                closeModal(close.closest('.modal')); // Fecha o modal mais próximo
             });
         });
 
+        // Fecha o modal se clicar fora dele (na área do modal)
         window.addEventListener('click', event => {
             if (event.target.classList.contains('modal')) {
                 closeModal(event.target);
@@ -658,7 +673,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
         });
     }
 
-    // Função genérica para requisições de exclusão de produtos/categorias
+    // Função genérica para excluir itens (produtos ou categorias)
     function deleteItem(type, id) {
         const confirmMessage = `Tem certeza que deseja excluir este ${type === 'product' ? 'produto' : 'categoria'}?`;
 
@@ -667,6 +682,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
             formData.append('action', type === 'product' ? 'delete' : 'delete_category');
             formData.append('id', id);
 
+            // Requisição para excluir o item via fetch
             fetch('product_register.php', {
                 method: 'POST',
                 body: formData,
@@ -688,23 +704,26 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
         }
     }
 
-    // Função para ações de produtos
+    // Função para configurar ações de edição e exclusão de produtos
     function setupProductActions() {
+        // Configura o botão de edição
         document.querySelectorAll('.editButton').forEach(button => {
             button.addEventListener('click', () => {
                 const productId = button.getAttribute('data-id');
                 document.getElementById('editId').value = productId;
-                openModal('editModal');
+                openModal('editModal'); // Abre o modal de edição
             });
         });
 
+        // Configura o botão de exclusão
         document.querySelectorAll('.deleteButton').forEach(button => {
             button.addEventListener('click', () => {
                 const productId = button.getAttribute('data-id');
-                deleteItem('product', productId);
+                deleteItem('product', productId); // Exclui o produto
             });
         });
 
+        // Configura o botão de exclusão de múltiplos produtos
         const deleteSelectedButton = document.getElementById('deleteSelected');
         if (deleteSelectedButton) {
             deleteSelectedButton.addEventListener('click', () => {
@@ -740,44 +759,47 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
         }
     }
 
-    // Função para ações de categorias
+    // Função para configurar ações de categorias (edição e exclusão)
     function setupCategoryActions() {
+        // Configura o botão de edição de categorias
         document.querySelectorAll('.editCategoryButton').forEach(button => {
             button.addEventListener('click', () => {
                 const categoryId = button.getAttribute('data-id');
                 document.getElementById('editCategoryId').value = categoryId;
-                openModal('editCategoryModal');
+                openModal('editCategoryModal'); // Abre o modal de edição de categoria
             });
         });
 
+        // Configura o botão de exclusão de categorias
         document.querySelectorAll('.deleteCategoryButton').forEach(button => {
             button.addEventListener('click', () => {
                 const categoryId = button.getAttribute('data-id');
-                deleteItem('category', categoryId);
+                deleteItem('category', categoryId); // Exclui a categoria
             });
         });
     }
 
-    // Habilitar ações no modal de pesquisa
+    // Função para configurar ações dentro do modal de pesquisa
     function setupSearchActions() {
-    const searchResultsTable = document.getElementById('searchResults').querySelector('tbody');
+        const searchResultsTable = document.getElementById('searchResults').querySelector('tbody');
 
-    searchResultsTable.addEventListener('click', event => {
-        if (event.target.classList.contains('editButton')) {
-            const productId = event.target.getAttribute('data-id');
-            document.getElementById('editId').value = productId;
+        // Configura as ações de editar e excluir dentro do modal de pesquisa
+        searchResultsTable.addEventListener('click', event => {
+            if (event.target.classList.contains('editButton')) {
+                const productId = event.target.getAttribute('data-id');
+                document.getElementById('editId').value = productId;
 
-            // Fechar o modal de pesquisa
-            closeModal(document.getElementById('searchModal'));
+                // Fecha o modal de pesquisa
+                closeModal(document.getElementById('searchModal'));
 
-            // Abrir o modal de edição
-            openModal('editModal');
-        } else if (event.target.classList.contains('deleteButton')) {
-            const productId = event.target.getAttribute('data-id');
-            deleteItem('product', productId);
-        }
-    });
-}
+                // Abre o modal de edição
+                openModal('editModal');
+            } else if (event.target.classList.contains('deleteButton')) {
+                const productId = event.target.getAttribute('data-id');
+                deleteItem('product', productId); // Exclui o produto
+            }
+        });
+    }
 
     // Função para pesquisa de produtos
     const searchForm = document.getElementById('searchForm');
@@ -790,10 +812,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
             const noResultsDiv = document.getElementById('noResults');
             const tableHead = document.getElementById('searchResults').querySelector('thead');
 
-            // Limpar os resultados anteriores
+            // Limpa os resultados anteriores
             resultsTable.innerHTML = '';
 
-            // Fazer requisição AJAX
+            // Requisição AJAX para buscar os produtos
             fetch('product_register.php?action=search&search=' + encodeURIComponent(searchQuery))
                 .then(response => response.text())
                 .then(data => {
@@ -805,7 +827,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
                         tableHead.style.display = 'table-header-group';
                         resultsTable.innerHTML = data;
 
-                        // Habilitar ações nos resultados
+                        // Habilita as ações nos resultados de pesquisa
                         setupSearchActions();
                     }
                 })
@@ -814,47 +836,52 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
                 });
         });
     }
+
+    // Configura o formulário de edição de categoria
     document.getElementById('editCategoryForm')?.addEventListener('submit', function(e) {
-    e.preventDefault(); // Impede o envio do formulário
-
-    const formData = new FormData(this);
-
-    fetch('product_register.php', {
-        method: 'POST',
-        body: formData,
-    })
-    .then(response => response.json()) // Tratando a resposta como JSON
-    .then(data => {
-        if (data.success) {
-            alert('Categoria editada com sucesso.'); // Mensagem de sucesso
-            location.reload(); // Atualiza a página
-        } else {
-            alert('Erro ao editar categoria: ' + (data.message || 'Erro desconhecido.')); // Mensagem de erro
-        }
-    })
-    .catch(error => {
-        alert('Erro ao editar categoria: ' + error); // Mensagem de erro
-    });
-});
-    // Selecionar ou desmarcar todos os checkboxes
-    document.getElementById('selectAll').addEventListener('change', function() {
-        const checkboxes = document.querySelectorAll('input[name="select[]"]');
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = this.checked; // Define o estado dos checkboxes baseado no estado do checkbox "Selecionar Todos"
-        });
-    });
-
-    // Função para adicionar categoria
-    document.getElementById('addCategoryForm')?.addEventListener('submit', function(e) {
-        e.preventDefault(); // Impede o envio do formulário
+        e.preventDefault(); // Impede o envio padrão do formulário
 
         const formData = new FormData(this);
 
+        // Requisição para editar a categoria
         fetch('product_register.php', {
             method: 'POST',
             body: formData,
         })
-        .then(response => response.json()) // Tratando a resposta como JSON
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Categoria editada com sucesso.');
+                location.reload(); // Atualiza a página
+            } else {
+                alert('Erro ao editar categoria: ' + (data.message || 'Erro desconhecido.'));
+            }
+        })
+        .catch(error => {
+            alert('Erro ao editar categoria: ' + error);
+        });
+    });
+
+    // Função para selecionar ou desmarcar todos os checkboxes
+    document.getElementById('selectAll').addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('input[name="select[]"]');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = this.checked; // Define o estado dos checkboxes com base no checkbox "Selecionar Todos"
+        });
+    });
+
+    // Configura o formulário de adicionar categoria
+    document.getElementById('addCategoryForm')?.addEventListener('submit', function(e) {
+        e.preventDefault(); // Impede o envio padrão do formulário
+
+        const formData = new FormData(this);
+
+        // Requisição para adicionar uma nova categoria
+        fetch('product_register.php', {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => response.json())
         .then(data => {
             if (data.success) {
                 alert('Categoria adicionada com sucesso.');
@@ -868,7 +895,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
         });
     });
 
-    // Inicialização de modais e ações
+    // Inicializa eventos e ações de modais e produtos
     setupModalEvents();
     setupProductActions();
     setupCategoryActions();
