@@ -587,7 +587,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
             <table id="categoryTable">
                 <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Nome</th>
                         <th>Ações</th>
                     </tr>
@@ -595,7 +594,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
                 <tbody>
                     <?php foreach ($categories as $category): ?>
                         <tr>
-                            <td><?php echo htmlspecialchars($category['id']); ?></td>
                             <td><?php echo htmlspecialchars($category['name']); ?></td>
                             <td>
                                 <button class="editCategoryButton" data-id="<?php echo htmlspecialchars($category['id']); ?>">Editar</button>
