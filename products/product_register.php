@@ -10,7 +10,17 @@ function getCategories($pdo, $userId)
     $stmt->execute([$userId]);
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
-
+// Função para editar um fornecedor existente
+function editSupplier($pdo, $id, $name, $address, $contact, $userId)
+{
+    $stmt = $pdo->prepare("UPDATE suppliers SET name = ?, address = ?, contact = ? WHERE id = ? AND user_id = ?");
+    return executeStatement($stmt, [$name, $address, $contact, $id, $userId]);
+}
+function deleteSupplier($pdo, $id, $userId)
+{
+    $stmt = $pdo->prepare("DELETE FROM suppliers WHERE id = ? AND user_id = ?");
+    return executeStatement($stmt, [$id, $userId]);
+}
 // Função para obter fornecedores de um usuário específico
 function getSuppliers($pdo, $userId)
 {
@@ -123,12 +133,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
     $id = $_POST['id'] ?? null;
     $name = $_POST['name'] ?? '';
+    $address = $_POST['address'] ?? ''; // Captura o endereço
+    $contact = $_POST['contact'] ?? ''; // Captura o contato
     $description = $_POST['description'] ?? '';
     $quantity = $_POST['quantity'] ?? 0;
     $supplier = $_POST['supplier'] ?? '';
     $categoryId = $_POST['category_id'] ?? null;
     $userId = $_SESSION['user_id'];
-    
+
 
     // Switch para tratar as diferentes ações de produto e categoria
     switch ($action) {
@@ -173,11 +185,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 exit();
             }
             break;
-            case 'add_supplier':
-                $result = addSupplier($pdo, $name, $_POST['address'], $_POST['contact'], $userId);
-                echo json_encode($result); // Retorna a resposta em formato JSON
+        case 'add_supplier':
+            $result = addSupplier($pdo, $name, $_POST['address'], $_POST['contact'], $userId);
+            echo json_encode($result); // Retorna a resposta em formato JSON
+            exit();
+        case 'delete_supplier':
+            if ($id) {
+                $result = deleteSupplier($pdo, $id, $userId);
+                echo $result['success'] ? 'success' : 'error';
                 exit();
-            
+            }
+            break;
+            case 'edit_supplier':
+                if ($id) {
+                    $result = editSupplier($pdo, $id, $name, $address, $contact, $userId);
+                    if ($result['success']) {
+                        echo json_encode(['status' => 'success', 'message' => 'Fornecedor atualizado com sucesso!']);
+                    } else {
+                        echo json_encode(['status' => 'error', 'message' => 'Erro ao atualizar fornecedor.']);
+                    }
+                    exit(); // Impede que o código continue executando
+                }
+                break;
     }
 
     // Redireciona após o processamento da ação
@@ -191,7 +220,9 @@ $userId = $_SESSION['user_id'];
 $products = getProducts($pdo, $userId, $searchQuery);
 $user = getUser($pdo, $userId);
 $categories = getCategories($pdo, $userId);
-$suppliers = getSuppliers($pdo, $userId); 
+$suppliers = getSuppliers($pdo, $userId);
+$address = $_POST['address'] ?? ''; // Captura o endereço
+$contact = $_POST['contact'] ?? ''; // Captura o contato
 
 // Retorna os produtos encontrados para a pesquisa via AJAX
 if (isset($_GET['action']) && $_GET['action'] === 'search') {
@@ -212,8 +243,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
                 </td>
             </tr>';
         }
-        
-
     } else {
         // Caso não haja resultados, retorna 'no-results'
         echo 'no-results';
@@ -362,7 +391,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
             background-color: #6b0000;
         }
 
-        .deleteButton{
+        .deleteButton {
             background-color: #ce0000;
         }
 
@@ -535,22 +564,61 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
 
     <!-- Modal de Adicionar Produto -->
     <div id="addModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Adicionar Produto</h2>
+            <form id="addProductForm" method="post">
+                <input type="hidden" name="action" value="add">
+                <label for="name">Nome:</label>
+                <input type="text" id="name" name="name" required><br>
+
+                <label for="description">Descrição:</label>
+                <input type="text" id="description" name="description" required><br>
+
+                <label for="quantity">Quantidade:</label>
+                <input type="number" id="quantity" name="quantity" required><br>
+
+                <label for="supplier">Fornecedor:</label>
+                <select id="supplier" name="supplier" required>
+                    <option value="" disabled selected>Selecione um fornecedor</option>
+                    <?php foreach ($suppliers as $supplier): ?>
+                        <option value="<?php echo htmlspecialchars($supplier['id']); ?>">
+                            <?php echo htmlspecialchars($supplier['name']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select><br>
+
+                <label for="category">Categoria:</label>
+                <select id="category" name="category_id" required>
+                    <option value="" disabled selected>Selecione uma categoria</option>
+                    <?php foreach ($categories as $category): ?>
+                        <option value="<?php echo htmlspecialchars($category['id']); ?>">
+                            <?php echo htmlspecialchars($category['name']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select><br>
+
+                <button type="submit">Adicionar</button>
+            </form>
+        </div>
+    </div>
+
+ <!-- Modal de Edição de Produto -->
+<div id="editModal" class="modal">
     <div class="modal-content">
         <span class="close">&times;</span>
-        <h2>Adicionar Produto</h2>
-        <form id="addProductForm" method="post">
-            <input type="hidden" name="action" value="add">
-            <label for="name">Nome:</label>
-            <input type="text" id="name" name="name" required><br>
-
-            <label for="description">Descrição:</label>
-            <input type="text" id="description" name="description" required><br>
-
-            <label for="quantity">Quantidade:</label>
-            <input type="number" id="quantity" name="quantity" required><br>
-
-            <label for="supplier">Fornecedor:</label>
-            <select id="supplier" name="supplier" required>
+        <h2>Editar Produto</h2>
+        <form id="editProductForm" method="post">
+            <input type="hidden" name="action" value="update">
+            <input type="hidden" id="editId" name="id">
+            <label for="editName">Nome:</label>
+            <input type="text" id="editName" name="name" required><br>
+            <label for="editDescription">Descrição:</label>
+            <input type="text" id="editDescription" name="description" required><br>
+            <label for="editQuantity">Quantidade:</label>
+            <input type="number" id="editQuantity" name="quantity" required><br>
+            <label for="editSupplier">Fornecedor:</label>
+            <select id="editSupplier" name="supplier" required>
                 <option value="" disabled selected>Selecione um fornecedor</option>
                 <?php foreach ($suppliers as $supplier): ?>
                     <option value="<?php echo htmlspecialchars($supplier['id']); ?>">
@@ -558,9 +626,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
                     </option>
                 <?php endforeach; ?>
             </select><br>
-
-            <label for="category">Categoria:</label>
-            <select id="category" name="category_id" required>
+            <label for="editCategory">Categoria:</label>
+            <select id="editCategory" name="category_id" required>
                 <option value="" disabled selected>Selecione uma categoria</option>
                 <?php foreach ($categories as $category): ?>
                     <option value="<?php echo htmlspecialchars($category['id']); ?>">
@@ -568,39 +635,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
                     </option>
                 <?php endforeach; ?>
             </select><br>
-
-            <button type="submit">Adicionar</button>
+            <button type="submit">Salvar</button>
         </form>
     </div>
 </div>
-    <!-- Modal de Edição de Produto -->
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Editar Produto</h2>
-            <form id="editProductForm" method="post">
-                <input type="hidden" name="action" value="update">
-                <input type="hidden" id="editId" name="id">
-                <label for="editName">Nome:</label>
-                <input type="text" id="editName" name="name" required><br>
-                <label for="editDescription">Descrição:</label>
-                <input type="text" id="editDescription" name="description" required><br>
-                <label for="editQuantity">Quantidade:</label>
-                <input type="number" id="editQuantity" name="quantity" required><br>
-                <label for="editSupplier">Fornecedor:</label>
-                <input type="text" id="editSupplier" name="supplier" required><br>
-                <label for="editCategory">Categoria:</label>
-                <select id="editCategory" name="category_id" required>
-                    <?php foreach ($categories as $category): ?>
-                        <option value="<?php echo htmlspecialchars($category['name']); ?>">
-                            <?php echo htmlspecialchars($category['name']); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select><br>
-                <button type="submit">Salvar</button>
-            </form>
-        </div>
-    </div>
 
     <div id="searchModal" class="modal">
         <div class="modal-content">
@@ -687,55 +725,80 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
     </div>
 
     <div id="manageSuppliersModal" class="modal">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2>Gerenciar Fornecedores</h2>
-        <button id="openAddSupplierModal">Novo Fornecedor</button>
-        <table id="supplierTable">
-            <thead>
-                <tr>
-                    <th>Nome</th>
-                    <th>Endereço</th>
-                    <th>Contato</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($suppliers as $supplier): ?>
-                <tr>
-                    <td><?php echo htmlspecialchars($supplier['name']); ?></td>
-                    <td><?php echo htmlspecialchars($supplier['address']); ?></td>
-                    <td><?php echo htmlspecialchars($supplier['contact']); ?></td>
-                </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Gerenciar Fornecedores</h2>
+            <button id="openAddSupplierModal">Novo Fornecedor</button>
+            <table id="supplierTable">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Endereço</th>
+                        <th>Contato</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($suppliers as $supplier): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($supplier['name']); ?></td>
+                            <td><?php echo htmlspecialchars($supplier['address']); ?></td>
+                            <td><?php echo htmlspecialchars($supplier['contact']); ?></td>
+                            <td>
+                                <button class="editSupplierButton" data-id="<?php echo htmlspecialchars($supplier['id']); ?>">Editar</button>
+                                <button class="deleteSupplierButton" data-id="<?php echo htmlspecialchars($supplier['id']); ?>">Excluir</button>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
 
 
-<!-- Modal de Adicionar Fornecedor -->
-<!-- Modal de Adicionar Fornecedor -->
-<div id="addSupplierModal" class="modal">
+    <!-- Modal de Adicionar Fornecedor -->
+    <div id="addSupplierModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Adicionar Fornecedor</h2>
+            <form id="addSupplierForm" method="post">
+                <input type="hidden" name="action" value="add_supplier">
+
+                <label for="supplierName">Nome do Fornecedor:</label>
+                <input type="text" id="supplierName" name="name" required><br>
+
+                <label for="supplierAddress">Endereço:</label>
+                <input type="text" id="supplierAddress" name="address" required><br>
+
+                <label for="supplierContact">Contato:</label>
+                <input type="text" id="supplierContact" name="contact" required><br>
+
+                <button type="submit">Adicionar</button>
+            </form>
+        </div>
+    </div>
+
+ <!-- Modal de Edição de Fornecedor -->
+<div id="editSupplierModal" class="modal">
     <div class="modal-content">
         <span class="close">&times;</span>
-        <h2>Adicionar Fornecedor</h2>
-        <form id="addSupplierForm" method="post">
-            <input type="hidden" name="action" value="add_supplier">
-            
-            <label for="supplierName">Nome do Fornecedor:</label>
-            <input type="text" id="supplierName" name="name" required><br>
-            
-            <label for="supplierAddress">Endereço:</label>
-            <input type="text" id="supplierAddress" name="address" required><br>
-            
-            <label for="supplierContact">Contato:</label>
-            <input type="text" id="supplierContact" name="contact" required><br>
-            
-            <button type="submit">Adicionar</button>
+        <h2>Editar Fornecedor</h2>
+        <form id="editSupplierForm" method="post">
+            <input type="hidden" name="action" value="edit_supplier">
+            <input type="hidden" id="editSupplierId" name="id">
+            <label for="editSupplierName">Nome:</label>
+            <input type="text" id="editSupplierName" name="name" required><br>
+
+            <label for="editSupplierAddress">Endereço:</label>
+            <input type="text" id="editSupplierAddress" name="address" required><br>
+
+            <label for="editSupplierContact">Contato:</label>
+            <input type="text" id="editSupplierContact" name="contact" required><br>
+
+            <button type="submit">Salvar</button>
         </form>
     </div>
 </div>
-
 
 
 
@@ -806,33 +869,96 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
             }
         }
 
- // Configura o formulário de adicionar fornecedor
-document.getElementById('addSupplierForm')?.addEventListener('submit', function(e) {
-    e.preventDefault(); // Impede o envio padrão do formulário
+        // Configura o formulário de adicionar fornecedor
+        document.getElementById('addSupplierForm')?.addEventListener('submit', function(e) {
+            e.preventDefault(); // Impede o envio padrão do formulário
 
-    const formData = new FormData(this);
-    formData.append('action', 'add_supplier'); // Adiciona a ação
+            const formData = new FormData(this);
+            formData.append('action', 'add_supplier'); // Adiciona a ação
 
-    // Requisição para adicionar um novo fornecedor
-    fetch('product_register.php', {
-            method: 'POST',
-            body: formData,
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Fornecedor adicionado com sucesso.');
-                location.reload(); // Atualiza a página
-            } else {
-                alert('Erro ao adicionar fornecedor: ' + (data.message || 'Erro desconhecido.'));
-            }
-        })
-        .catch(error => {
-            alert('Erro ao adicionar fornecedor: ' + error);
+            // Requisição para adicionar um novo fornecedor
+            fetch('product_register.php', {
+                    method: 'POST',
+                    body: formData,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Fornecedor adicionado com sucesso.');
+                        location.reload(); // Atualiza a página
+                    } else {
+                        alert('Erro ao adicionar fornecedor: ' + (data.message || 'Erro desconhecido.'));
+                    }
+                })
+                .catch(error => {
+                    alert('Erro ao adicionar fornecedor: ' + error);
+                });
         });
+
+        document.getElementById('editSupplierForm').addEventListener('submit', function(e) {
+    e.preventDefault(); // Impede o envio normal do formulário
+
+    const formData = new FormData(this); // Captura os dados do formulário
+
+    // Envia os dados via POST usando XMLHttpRequest
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', 'product_register.php', true);
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            const response = JSON.parse(xhr.responseText);
+            if (response.status === 'success') {
+                alert(response.message); // Alerta de sucesso
+                // Aqui você pode atualizar a lista de fornecedores ou fechar o modal
+                document.getElementById('editSupplierModal').style.display = 'none';
+                location.reload(); // Recarrega a página para mostrar as alterações
+            } else {
+                alert(response.message); // Alerta de erro
+            }
+        } else {
+            alert('Ocorreu um erro ao processar a solicitação.'); // Alerta de erro geral
+        }
+    };
+    xhr.send(formData); // Envia os dados
 });
 
+        // Função genérica para excluir fornecedores
+        function deleteSupplier(id) {
+            const confirmMessage = 'Tem certeza que deseja excluir este fornecedor?';
 
+            if (confirm(confirmMessage)) {
+                const formData = new FormData();
+                formData.append('action', 'delete_supplier');
+                formData.append('id', id);
+
+                // Requisição para excluir o fornecedor via fetch
+                fetch('product_register.php', {
+                        method: 'POST',
+                        body: formData,
+                    })
+                    .then(response => response.text())
+                    .then(data => {
+                        if (data === 'success') {
+                            alert('Fornecedor excluído com sucesso.');
+                            location.reload(); // Atualiza a página
+                        } else {
+                            alert('Erro ao excluir o fornecedor.');
+                            console.error('Erro:', data);
+                        }
+                    })
+                    .catch(error => {
+                        alert('Erro ao excluir o fornecedor.');
+                        console.error('Erro:', error);
+                    });
+            }
+        }
+
+        // Configura o botão de exclusão dos fornecedores
+        document.querySelectorAll('.deleteSupplierButton').forEach(button => {
+            button.addEventListener('click', () => {
+                const supplierId = button.getAttribute('data-id');
+                deleteSupplier(supplierId); // Exclui o fornecedor
+            });
+        });
 
         // Função para configurar ações de edição e exclusão de produtos
         function setupProductActions() {
@@ -888,6 +1014,35 @@ document.getElementById('addSupplierForm')?.addEventListener('submit', function(
                 });
             }
         }
+
+        // Função para abrir o modal de edição com os dados do fornecedor
+        function openEditSupplierModal(supplier) {
+            document.getElementById('editSupplierId').value = supplier.id;
+            document.getElementById('editSupplierName').value = supplier.name;
+            document.getElementById('editSupplierAddress').value = supplier.address;
+            document.getElementById('editSupplierContact').value = supplier.contact;
+
+            // Abre o modal
+            document.getElementById('editSupplierModal').style.display = 'block';
+        }
+
+        // Configura o botão de edição dos fornecedores
+        document.querySelectorAll('.editSupplierButton').forEach(button => {
+            button.addEventListener('click', () => {
+                const supplierId = button.getAttribute('data-id');
+                // Busque os dados do fornecedor usando AJAX
+                fetch(`get_supplier.php?id=${supplierId}`)
+                    .then(response => response.json())
+                    .then(supplier => {
+                        openEditSupplierModal(supplier); // Abre o modal com os dados do fornecedor
+                    })
+                    .catch(error => {
+                        console.error('Erro ao buscar fornecedor:', error);
+                    });
+            });
+        });
+
+
 
         // Função para configurar ações de categorias (edição e exclusão)
         function setupCategoryActions() {
@@ -1030,13 +1185,12 @@ document.getElementById('addSupplierForm')?.addEventListener('submit', function(
         setupProductActions();
         setupCategoryActions();
 
-// Eventos de abertura de modais
-document.getElementById('openAddModal')?.addEventListener('click', () => openModal('addModal'));
-document.getElementById('openSearchModal')?.addEventListener('click', () => openModal('searchModal'));
-document.getElementById('openCategoryModal')?.addEventListener('click', () => openModal('categoryModal'));
-document.getElementById('openAddCategoryModal')?.addEventListener('click', () => openModal('addCategoryModal'));
-document.getElementById('openManageSuppliersModal')?.addEventListener('click', () => openModal('manageSuppliersModal')); // Adicionado
-// Evento para abrir o modal de adicionar fornecedor
-document.getElementById('openAddSupplierModal')?.addEventListener('click', () => openModal('addSupplierModal'));
-
+        // Eventos de abertura de modais
+        document.getElementById('openAddModal')?.addEventListener('click', () => openModal('addModal'));
+        document.getElementById('openSearchModal')?.addEventListener('click', () => openModal('searchModal'));
+        document.getElementById('openCategoryModal')?.addEventListener('click', () => openModal('categoryModal'));
+        document.getElementById('openAddCategoryModal')?.addEventListener('click', () => openModal('addCategoryModal'));
+        document.getElementById('openManageSuppliersModal')?.addEventListener('click', () => openModal('manageSuppliersModal')); // Adicionado
+        // Evento para abrir o modal de adicionar fornecedor
+        document.getElementById('openAddSupplierModal')?.addEventListener('click', () => openModal('addSupplierModal'));
     </script>
