@@ -403,7 +403,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
 }
 
 .buttonSup:hover{
-    background-color: #d94404;
+    background-color: #8c2b01;
 }
 
         /* Estilos para o modal */
@@ -524,7 +524,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
         <img src="../Imagens/icons8-caixa-128.png" class="logo" alt="Logo">
         <h1>Cadastro de Produtos</h1>
         <div class="user-info">
-            <span><?php echo htmlspecialchars($user['username']); ?></span>
+            <span>Bem-vindo <?php echo htmlspecialchars($user['username']); ?></span>
             <form id="logoutForm" action="logout.php" method="post">
                 <button type="submit" class="buttonLogout">
                     <img src="../imagens/icons8-logout-100.png" class="imglogout">Sair
