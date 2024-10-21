@@ -35,8 +35,9 @@ function getUser($pdo, $userId)
 // Função para buscar produtos de um usuário, com suporte a pesquisa
 function getProducts($pdo, $userId, $searchQuery = '')
 {
-    $sql = "SELECT p.*, c.name as category_name FROM products p 
+    $sql = "SELECT p.*, c.name as category_name, s.name as supplier_name FROM products p 
             LEFT JOIN categories c ON p.category_id = c.id 
+            LEFT JOIN suppliers s ON p.supplier = s.id 
             WHERE p.user_id = ?";
     $params = [$userId];
 
@@ -200,11 +201,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
         // Exibe cada produto encontrado na tabela de resultados
         foreach ($products as $product) {
             echo '<tr>
-
                 <td>' . htmlspecialchars($product['name']) . '</td>
                 <td>' . htmlspecialchars($product['description']) . '</td>
                 <td>' . htmlspecialchars($product['quantity']) . '</td>
-                <td>' . htmlspecialchars($product['supplier']) . '</td>
+                <td>' . htmlspecialchars($product['supplier_name']) . '</td> 
                 <td>' . htmlspecialchars($product['category_name']) . '</td>
                 <td>
                     <button class="editButton" data-id="' . htmlspecialchars($product['id']) . '">Editar</button>
@@ -212,6 +212,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
                 </td>
             </tr>';
         }
+        
+
     } else {
         // Caso não haja resultados, retorna 'no-results'
         echo 'no-results';
@@ -519,7 +521,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
                         <td><?php echo htmlspecialchars($product['name']); ?></td>
                         <td><?php echo htmlspecialchars($product['description']); ?></td>
                         <td><?php echo htmlspecialchars($product['quantity']); ?></td>
-                        <td><?php echo htmlspecialchars($product['supplier']); ?></td>
+                        <td><?php echo htmlspecialchars($product['supplier_name']); ?></td>
                         <td><?php echo htmlspecialchars($product['category_name']); ?></td>
                         <td>
                             <button class="editButton" data-id="<?php echo htmlspecialchars($product['id']); ?>">Editar</button>
@@ -533,33 +535,44 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
 
     <!-- Modal de Adicionar Produto -->
     <div id="addModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Adicionar Produto</h2>
-            <form id="addProductForm" method="post">
-                <input type="hidden" name="action" value="add">
-                <label for="name">Nome:</label>
-                <input type="text" id="name" name="name" required><br>
-                <label for="description">Descrição:</label>
-                <input type="text" id="description" name="description" required><br>
-                <label for="quantity">Quantidade:</label>
-                <input type="number" id="quantity" name="quantity" required><br>
-                <label for="supplier">Fornecedor:</label>
-                <input type="text" id="supplier" name="supplier" required><br>
-                <label for="category">Categoria:</label>
-                <select id="category" name="category_id" required>
-                    <option value="" disabled selected>Selecione uma categoria</option>
-                    <?php foreach ($categories as $category): ?>
-                        <option value="<?php echo htmlspecialchars($category['id']); ?>">
-                            <?php echo htmlspecialchars($category['name']); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select><br>
-                <button type="submit">Adicionar</button>
-            </form>
-        </div>
-    </div>
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Adicionar Produto</h2>
+        <form id="addProductForm" method="post">
+            <input type="hidden" name="action" value="add">
+            <label for="name">Nome:</label>
+            <input type="text" id="name" name="name" required><br>
 
+            <label for="description">Descrição:</label>
+            <input type="text" id="description" name="description" required><br>
+
+            <label for="quantity">Quantidade:</label>
+            <input type="number" id="quantity" name="quantity" required><br>
+
+            <label for="supplier">Fornecedor:</label>
+            <select id="supplier" name="supplier" required>
+                <option value="" disabled selected>Selecione um fornecedor</option>
+                <?php foreach ($suppliers as $supplier): ?>
+                    <option value="<?php echo htmlspecialchars($supplier['id']); ?>">
+                        <?php echo htmlspecialchars($supplier['name']); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select><br>
+
+            <label for="category">Categoria:</label>
+            <select id="category" name="category_id" required>
+                <option value="" disabled selected>Selecione uma categoria</option>
+                <?php foreach ($categories as $category): ?>
+                    <option value="<?php echo htmlspecialchars($category['id']); ?>">
+                        <?php echo htmlspecialchars($category['name']); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select><br>
+
+            <button type="submit">Adicionar</button>
+        </form>
+    </div>
+</div>
     <!-- Modal de Edição de Produto -->
     <div id="editModal" class="modal">
         <div class="modal-content">
@@ -579,7 +592,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'search') {
                 <label for="editCategory">Categoria:</label>
                 <select id="editCategory" name="category_id" required>
                     <?php foreach ($categories as $category): ?>
-                        <option value="<?php echo htmlspecialchars($category['id']); ?>">
+                        <option value="<?php echo htmlspecialchars($category['name']); ?>">
                             <?php echo htmlspecialchars($category['name']); ?>
                         </option>
                     <?php endforeach; ?>
